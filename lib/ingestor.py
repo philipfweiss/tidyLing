@@ -9,15 +9,11 @@ class Ingestor:
         }
 
     def ingest(self, filepath):
-        try:
-            file = open(filepath, 'r')
-            name, ext = os.path.splitext(filepath)
+        file = open(filepath, 'r')
+        name, ext = os.path.splitext(filepath)
 
-            if ext in self.parsermap:
-                return self._invoke_parser(file, ext)
-
-        except Exception:
-            print("Unable to parse " + filepath)
+        if ext in self.parsermap:
+            return self._invoke_parser(file, ext)
 
         return []
 
