@@ -1,0 +1,827 @@
+\documentclass[10pt, a4paper]{article}
+\usepackage{lrec2016}
+%\usepackage{multibib}
+%\newcites{languageresource}{Language Resources}
+\usepackage{graphicx}
+\usepackage{tikz-dependency}
+\tikzset{/depgraph/.cd,/depgraph/.search also = {/tikz},
+    baseline=-0.6ex, inner sep=-0.1cm, edge horizontal padding=3pt, edge unit distance=1.5ex}
+
+% for eps graphics
+
+\usepackage{epstopdf}
+\usepackage[latin1]{inputenc}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{fnpct}
+\setfnpct{after-punct-space=-0.25em,before-footnote-space=0em}
+ 
+
+\title{Enhanced English Universal Dependencies:  \\ An Improved Representation for Natural Language Understanding Tasks}
+
+\name{Sebastian Schuster and Christopher D. Manning}
+
+\address{Linguistics Department and Computer Science Department \\
+         Stanford University, Stanford, CA 94305 \\
+         \{sebschu,manning\}@stanford.edu\\}
+
+
+\abstract{
+Many shallow natural language understanding tasks use dependency trees to extract relations between content words. However, strict surface-structure dependency trees tend to follow the linguistic structure of sentences too closely and frequently fail to provide direct relations between content words. To mitigate this problem, the original Stanford Dependencies representation also defines two dependency graph representations which contain additional and augmented relations that explicitly capture otherwise implicit relations between content words. In this paper, we revisit and extend these dependency graph representations in light of the recent Universal Dependencies (UD) initiative and provide a detailed account of an \textit{enhanced} and an \textit{enhanced++} English UD representation. We further present a converter from constituency to \textit{basic}, i.e., strict surface structure, UD trees, and a converter from \textit{basic} UD trees to \textit{enhanced} and \textit{enhanced++} English UD graphs. We release both converters as part of Stanford CoreNLP and the Stanford Parser. \\ 
+\newline 
+\Keywords{Universal Dependencies, semantic representation, treebank conversion} }
+
+\begin{document}
+
+\maketitleabstract
+
+
+\section{Introduction}
+
+Since its first version, the Stanford Dependencies (SD) representation \cite{demarneffe2006generating}  
+has had the status of being both a syntactic and a shallow semantic representation. 
+This dual status is also reflected in the usage of SD in natural language processing tasks which broadly fall into
+two categories. The first category is composed of tasks that require a syntactic tree such as source-side reordering 
+for machine translation (e.g., \newcite{genzel2010automatically}) and sentence compression \cite{galanis2010extractive}.
+For these tasks, a sound syntactic representation is more important than the relations between individual words.  
+
+The second and much larger category is composed of a wide range of shallow natural language understanding (NLU) tasks such as biomedical text mining 
+(e.g., \newcite{airola2008all}), open domain relation extraction (e.g., \newcite{mausam2012open}), and unsupervised semantic parsing
+\cite{poon2009unsupervised}. For these tasks, the relations between content words are more important than the overall tree structure.
+
+Not surprisingly, we observe a similar divide if we look at which 
+one of the three SD representations % (\textit{basic}, \textit{collapsed}, or \textit{CCprocessed}) 
+is being used for the individual downstream tasks. 
+Most systems that require a syntactic representation use 
+\textit{basic} SD trees which are guaranteed to be a strict 
+surface syntax tree. On the other hand, most systems that 
+are concerned with the relations between content words use
+ the \textit{collapsed} or \textit{CCprocessed} SD
+representations. These representations may be graphs instead 
+of trees, and may contain additional and augmented relations that 
+explicitly capture otherwise implicit relations between content 
+words. 
+
+To illustrate one of the differences between these representations,
+consider the sentence  \textit{``Fred started to laugh''}.
+The \textit{basic} SD representation of 
+this sentence lacks a direct relation between the 
+controlled verb \textit{laugh} and its controller, \textit{Fred}, 
+while in the \textit{CCprocessed} SD representation,
+this relation is made explicit with an additional subject edge.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    Fred \& started \& to \& laugh \\
+  \end{deptext}
+  \depedge{2}{1}{nsubj}
+  \depedge[edge below, edge unit distance=1.5ex]{4}{1}{\textbf{nsubj}}
+  \depedge{2}{4}{xcomp}
+  \depedge{4}{3}{mark}
+\end{dependency}
+\end{center}
+\end{quote}
+
+The popularity of these extended representations suggests 
+that their existence plays a major role in the popularity of Stanford 
+Dependencies. 
+
+In recent years, there has been a lot of interest in extending Stanford Dependencies
+ to other languages, including morphologically rich ones \cite{mcdonald2013universal,tsarfaty2013unified,demarneffe2014universal}.
+These individual projects ultimately led to the Universal Dependencies (UD) initiative \cite{nivre2016universal} whose goal is to develop 
+cross-linguistically consistent treebank annotations for as many languages as possible. 
+While this project recognizes the status of dependency formalisms as semantic representations
+and based many design decisions on their impact on NLU tasks, 
+the majority of efforts so far have focused on the development of the \textit{basic} UD representation and 
+the annotation of treebanks. Both \newcite{demarneffe2014universal} and \newcite{nivre2016universal} also mention an \textit{enhanced} 
+UD representation and acknowledge its usefulness 
+but neither gives a detailed account of what such a representation should look like.
+
+In this paper, we revisit and extend the \textit{collapsed} and \textit{CCprocessed} SD representations in light of the recent developments 
+by the Universal Dependencies initiative. We provide a detailed account of an \textit{enhanced} English UD representation and introduce 
+the \textit{enhanced++} representation which we deem even better suited for many NLU tasks. Further, we describe 
+our implementation of a converter from phrase-structure trees to \textit{basic} UD trees, 
+and a converter from \textit{basic} to \textit{enhanced} and \textit{enhanced++} English UD graphs. 
+We release both tools as part of Stanford CoreNLP and the Stanford Parser.
+
+\section{The \textit{enhanced} UD representation}
+
+The \textit{enhanced} English UD representation aims to make implicit relations between content words 
+more explicit by adding relations and augmenting relation names. In the development of
+this representation, we adhered to the guidelines by \newcite{nivre2016universal} which state that an \textit{enhanced} 
+dependency graph may only contain additional dependencies or introduce additional language-specific 
+relations. 
+
+
+As a result, \textit{enhanced} UD graphs contain all the relations of the \textit{basic} UD tree and
+the following additional relations.
+
+\paragraph{Augmented modifiers} One major difference between 
+the SD and UD representations is that the head of prepositional phrases (PP)
+is the prepositional complement and no longer the preposition itself. 
+Therefore, there already exists a relation between the content word in
+the prepositional phrase and the word that is being modified by the PP 
+in the \textit{basic} UD representation, and there is no need for an 
+additional relation in the \textit{enhanced} representation. 
+However, the \textit{collapsed} SD graphs of sentences with PPs
+do not only contain additional relations, they also include the 
+preposition in the relation name. This helps to disambiguate the type of
+modifier and further facilitates the extraction of 
+relationships between content words, especially if a system incorporates 
+dependency information using very simple methods
+such as by only considering paths between two nodes.
+For this reason, all nominal modifiers (\texttt{nmod}) in \textit{enhanced} UD graphs 
+also include the preposition in their relation name as exemplified in the following phrase.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    the \& house \& on \& the \& hill \\
+  \end{deptext}
+  \depedge{2}{1}{det}
+  \depedge{2}{5}{\textbf{nmod:on}}
+  \depedge{5}{3}{case}
+  \depedge{5}{4}{det}
+\end{dependency}
+\end{center}
+\end{quote}
+
+The same is true for more complex PPs which are either analyzed as adverbial 
+clause modifiers (\texttt{advcl}) or as adjectival clause modifiers (\texttt{acl}) in UD.
+If an adverbial clause or an adjectival clause is introduced by a marker (\texttt{mark}),
+we add the marker to the relation name.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    he \& brushed \& his \& teeth \& after \& eating \& dinner \\
+  \end{deptext}
+  \depedge{2}{1}{nsubj}
+  \depedge{2}{6}{\textbf{nmod:after}}
+  \depedge{6}{5}{mark}
+  \depedge{6}{7}{dobj}
+  \depedge[edge unit distance=3ex]{2}{4}{dobj}
+\end{dependency}
+\end{center}
+\end{quote}
+
+\paragraph{Augmented conjuncts} In a similar manner, \textit{enhanced} UD 
+graphs also contain conjunct relations that are augmented with their coordinating 
+conjunction. This makes the type of coordination between two phrases more 
+explicit which is particularly useful in phrases with multiple coordinating conjunctions,
+such as the following phrase.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    apples \& and \& bananas, \& or \& oranges  \\
+  \end{deptext}
+  \depedge{1}{2}{cc}
+  \depedge{1}{3}{\textbf{conj:and}}
+  \depedge{1}{4}{cc}
+  \depedge{1}{5}{\textbf{conj:or}}
+\end{dependency}
+\end{center}
+\end{quote}
+
+\paragraph{Propagated governors and dependents} In \textit{basic} UD trees of clauses with conjoined phrases, only the first conjunct has explicit
+relations to the governor and the dependents of the conjoined phrase. In the \textit{enhanced} UD graph,
+the implicit relations of the other conjuncts are made explicit with additional relations. In the case of conjoined noun phrases,
+each noun phrase becomes an argument of the head of the first conjunct, e.g., it becomes the subject of the main verb as in the following example. 
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    Sue \& and \& Paul \& are \& running \\
+  \end{deptext}
+  \depedge{5}{1}{nsubj}
+  \depedge{1}{2}{cc}
+  \depedge{1}{3}{conj:and}
+  \depedge[edge below]{5}{3}{\textbf{nsubj}}
+  \depedge{5}{4}{aux}
+\end{dependency}
+\end{center}
+\end{quote}
+
+In the case of conjoined adjectival phrases, each adjective becomes a modifier of the
+head of the first conjunct.  
+
+\begin{quote}
+\begin{center}
+ \begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    the \& long \& and \& wide \& river \\
+  \end{deptext}
+  \depedge{5}{1}{det}
+  \depedge{5}{2}{amod}
+  \depedge{2}{3}{cc}
+  \depedge{2}{4}{conj:and}
+  \depedge[edge below, edge unit distance=4ex]{5}{4}{\textbf{amod}}
+\end{dependency}
+\end{center}
+\end{quote}
+
+In the case of conjoined verbs, the arguments of the first verb, e.g., the subject and the direct object,
+also become the arguments of the other verbs.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    the \& store \& buys \& and \& sells  \& cameras \\
+  \end{deptext}
+  \depedge{2}{1}{det}
+        \depedge{3}{6}{dobj}
+  \depedge[edge below, edge unit distance=1.5ex]{5}{2}{\textbf{nsubj}}
+    \depedge{3}{2}{nsubj}
+  \depedge{3}{4}{cc}
+  \depedge{3}{5}{conj:and}
+  \depedge[edge below]{5}{6}{\textbf{dobj}}
+\end{dependency}
+\end{center}
+\end{quote}
+
+\paragraph{Subjects of controlled verbs} \textit{Basic} UD graphs of sentences that contain a controlled embedded verb lack a direct relation between
+the controlled verb and the controller. Therefore, the \textit{enhanced} UD graphs contain a special controlling subject (\texttt{nsubj:xsubj}) 
+relation between the embedded verb and the controller.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    Sue \& wants \& to \& buy \& a \& hat \\
+  \end{deptext}
+  \depedge{2}{1}{nsubj}
+  \depedge[edge below, edge unit distance=1.5ex]{4}{1}{\textbf{nsubj:xsubj}}
+  \depedge{2}{4}{xcomp}
+  \depedge{4}{3}{mark}
+  \depedge{4}{6}{dobj}
+  \depedge{6}{5}{det}
+\end{dependency}
+\end{center}
+\end{quote}
+
+
+
+\section{The \textit{enhanced++} UD representation }
+
+The \textit{enhanced} representation provides reasonable analyses for most English sentences. However, there are some
+constructions in English that lead to an analysis which is suboptimal for many NLU systems
+ that try to extract relationships between entities, such as open domain relation extraction 
+(e.g., \newcite{mausam2012open}), or extracting relationships between objects in 
+image descriptions \cite{schuster2015generating}.
+
+One set of problematic constructions involves partitive noun phrases 
+such as \textit{both of the girls} in which \textit{both of the} acts semantically 
+as a quantificational determiner. In the \textit{basic} UD representation, however, 
+\textit{both} is the head of such a partitive phrase while the semantically 
+very similar phrase \textit{both girls} is headed by \textit{girls}:
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+   both \& of \&  the \& girls \& are \& reading \\
+  \end{deptext}
+  \depedge{1}{4}{nmod:of}
+  \depedge{4}{2}{case}
+  \depedge{4}{3}{det}
+    \depedge{6}{5}{aux}
+  \depedge{6}{1}{nsubj}
+
+\end{dependency}
+\end{center}
+\end{quote}
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+   both \& girls \& are \& reading \\
+  \end{deptext}
+  \depedge{2}{1}{det}
+  \depedge{4}{3}{aux}
+  \depedge{4}{2}{nsubj}
+  
+\end{dependency}
+\end{center}
+\end{quote}
+
+Considering that many relation extraction systems use simple dependency tree patterns to
+extract entities and their relations, these different analyses are clearly problematic. In the first
+phrase, the determiner \textit{both} appears to be the subject while in the second phrase, 
+\textit{girls} is the subject, but ideally both phrases would be analyzed in a similar way.
+However, in order to obtain a similar analysis for both phrases, we would have to change
+the structure of the \textit{basic} dependency trees, which is not allowed according to 
+the guidelines for \textit{enhanced} dependency graphs.
+
+Another set of problematic constructions involves multi-word prepositions 
+such as \textit{in front of}. As illustrated in the following tree,
+the \textit{enhanced} representation of ``\textit{a house in front of the hill}'' 
+contains a relation between  \textit{house} and \textit{front},
+and a relation between \textit{front} and \textit{hill}.  
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    the \& house \& in \& front \& of \& the \& hill \\
+  \end{deptext}
+  \depedge{2}{1}{det}
+  \depedge{2}{4}{\textbf{nmod:in}}
+  \depedge{4}{3}{case}
+    \depedge{4}{7}{\textbf{nmod:of}}
+  \depedge{7}{5}{case}
+  \depedge{7}{6}{det}
+\end{dependency}
+\end{center}
+\end{quote}
+
+But for most tasks, the relation between  \textit{house} and \textit{hill} is going to 
+be more relevant. This relation could be made explicit by adding another 
+relation between \textit{house} and \textit{hill}, but as we are not allowed to delete any relations
+from the \textit{basic} representation, we would encode some information twice.
+
+These two issues should illustrate that there exist several phenomena for which both the \textit{basic} UD representation
+and the \textit{enhanced} UD representation provide suboptimal analyses. 
+For this reason, we argue for another representation which allows for the deletion of relations from the \textit{basic} UD tree, as
+this gives us more flexibility in analyzing several constructions in English, including the ones mentioned above. 
+We therefore introduce \textit{enhanced++} UD graphs and propose different analyses for the following common phenomena in English.
+
+
+\paragraph{Partitives and light noun constructions} 
+
+For the analysis of partitive noun phrases such as \textit{both of the girls}, 
+we follow \newcite{barwise1981} and \newcite{keenan1986} and treat
+the first part of the phrase as a quantificational determiner. We 
+promote the semantically salient noun phrase, e.g., \textit{girls} in our example, to 
+be the head of the partitive and we analyze the quantificational determiner
+as a flat multi-word expression that is headed by its first word. In order to
+mark that these quantificational determiners are not regular determiners,
+we attach them using the special relation quantificational modifier (\texttt{det:qmod}).
+
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    both \& of \& the \& girls \& are \& reading \\
+  \end{deptext}
+    \depedge{4}{1}{\textbf{det:qmod}}
+  \depedge{1}{3}{mwe}
+  \depedge{1}{2}{mwe}
+    \depedge{6}{4}{nsubj}
+  \depedge{6}{5}{aux}
+\end{dependency}
+\end{center}
+\end{quote}
+
+Light noun constructions \cite{simone2014light} such as \textit{a panel of experts} or
+\textit{a bunch of people} pose similar challenges because the light nouns are the head of
+these phrases in the corresponding \textit{basic} UD trees. However, just like the partitives,
+the second noun phrase tends to be the semantically salient one in these constructions
+while the first part of the phrase again serves as a quantificational determiner. We therefore analyze
+light noun constructions exactly like partitives as illustrated in the following example\footnote{The special treatment 
+of light noun constructions also raises the question 
+of how we should treat light verb constructions (LVCs) 
+\cite{jespersen1954modern} such as \textit{to make a decision}. 
+In many contexts, these constructions have a very similar meaning 
+as a semantically strong verb, e.g., \textit{decide}, and ideally 
+sentences would be analyzed in similar ways independent of 
+whether they contain a LVC or a semantically strong verb. 
+However, unlike in the case of light noun constructions, we 
+cannot achieve this goal by solely adding or removing edges, 
+and instead would have to modify surface tokens, e.g., turning 
+\textit{decision} into \textit{decide}. Because of this and other 
+issues concerning LVCs, we currently do not analyze LVCs in 
+a special way.}.
+
+ \begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    a \& bunch \& of \& people \& are \& coming \\
+  \end{deptext}
+    \depedge{4}{1}{\textbf{det:qmod}}
+  \depedge{1}{3}{mwe}
+  \depedge{1}{2}{mwe}
+    \depedge{6}{4}{nsubj}
+  \depedge{6}{5}{aux}
+\end{dependency}
+\end{center}
+\end{quote}
+
+
+\paragraph{Multi-word prepositions} As mentioned above, multi-word prepositions such as \textit{in front of} tend to obscure the relation between two content words. While the \textit{basic} UD representation analyzes some multi-word expressions with function words, e.g., \textit{due to}, using a special \texttt{mwe} relation, the set of these expressions is very limited and does not include many multi-word prepositions. To introduce a direct relation between content words in the \textit{enhanced++} UD representation, we also analyze these multi-word prepositions as flat multi-word expressions headed by the first word, and we attach the head of the phrase to the following noun phrase.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    the \& house \& in \& front \& of \& the \& hill \\
+  \end{deptext}
+  \depedge{2}{1}{det}
+  \depedge{2}{7}{\textbf{nmod:in\_front\_of}}
+  \depedge{3}{5}{mwe}
+   \depedge{3}{4}{mwe}
+  \depedge{7}{3}{case}
+  \depedge{7}{6}{det}
+\end{dependency}
+\end{center}
+\end{quote}
+
+%Note that this analysis is identical to the analysis of other multi-word expressions 
+%in the \textit{basic} UD representation, such as \textit{due to}. 
+%In the \textit{basic} representation, however, the set of phrases that are considered
+%multi-word expressions is much smaller than in the \textit{enhanced++} representation
+
+
+
+\paragraph{Conjoined prepositions and prepositional phrases} 
+Clauses that contain conjoined prepositions such as \textit{``I bike to and from work''}
+also pose some challenges. Ideally, the UD graph should encode 
+that there is an \texttt{nmod:to} as well as an \texttt{nmod:from} 
+relation between \textit{bike} and \textit{work}. Further, we also 
+want to encode that \textit{bike to work} and \textit{bike from work} 
+are conjoined by \textit{and}. In order to be able to represent all of this information, 
+the \textit{CCprocessed} SD representation introduced copy nodes which 
+we adapt in the \textit{enhanced++} representation. 
+The analysis of this example then contains a copy of \textit{bike}, 
+namely \textit{bike$'$}. This copy node is attached to the original node as 
+a conjunct resulting in the following UD graph.
+
+%TODO: explain this better
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    I \& bike \& \textbf{bike$'$} \& to \& and \& from \& work \\
+  \end{deptext}
+  \depedge{2}{7}{nmod:to}
+  \depedge[edge below, edge unit distance=1.14ex ]{3}{7}{nmod:from}
+  \depedge{7}{4}{case}
+  \depedge{4}{5}{cc}
+    \depedge{4}{6}{conj:and}
+  \depedge{2}{1}{nsubj}
+  \depedge[edge below]{3}{1}{nsubj}
+    \depedge{2}{3}{conj:and}
+\end{dependency}
+\end{center}
+\end{quote}
+
+Note that this graph contains the same 
+relations between content words as the \textit{basic} UD tree of the clause 
+\textit{``I bike to work and I bike from work''}.
+
+Similar complexities arise with clauses that contain a conjoined prepositional phrase such as 
+\textit{``She flew to Bali or to Turkey''}. Again, the UD graph should encode
+that there is an \textit{nmod:to} relation between \textit{flew} and \textit{Bali}
+and another \textit{nmod:to} relation between \textit{flew} and \textit{Turkey} and
+at the same time it should encode that these two relations are conjoined by \textit{or}.
+For these reasons, we also analyze such clauses with copy nodes.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    She \& flew \ \ \  \& \ \ \ \ \textbf{flew$'$} \& to \& Bali \& or \& to \& Turkey \\
+  \end{deptext}
+   \depedge[edge below, edge unit distance=0.9ex]{3}{8}{nmod:to}
+  \depedge{2}{5}{nmod:to}
+  \depedge{5}{4}{case}
+  \depedge{5}{6}{cc}
+  \depedge[edge below ]{3}{1}{nsubj}
+  \depedge{2}{1}{nsubj}
+    \depedge{8}{7}{case}
+  \depedge{2}{3}{conj:or}
+\end{dependency}
+\end{center}
+\end{quote}
+
+
+\paragraph{Relative pronouns} We also analyze relative pronouns differently 
+in the \textit{enhanced++} representation as compared to the \textit{basic} UD
+representation. Similar to the \textit{collapsed} SD representation, the referent of 
+the pronoun is directly attached to the governor of the pronoun.
+Further, we attach the relative pronoun to its referent with a referent (\texttt{ref})
+relation.
+
+The following example illustrates the differences between \textit{basic} UD and \textit{enhanced++}
+UD graphs which contain relative clauses. In the \textit{basic} UD tree (a), the head of the relative pronoun
+\textit{who} is \textit{lived} and there is no direct relation indicating that \textit{boy} is an argument of \textit{lived}. 
+In the \textit{enhanced++} representation (b), on the other hand, \textit{boy} is the subject of \textit{lived}, 
+and \textit{who} is attached to its referent, \textit{boy}.
+
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    (a) The \& boy \& who \& lived \\
+  \end{deptext}
+     \depedge{2}{1}{det}
+   \depedge{2}{4}{acl:relcl}
+  \depedge{4}{3}{nsubj}
+\end{dependency}
+\end{center}
+\end{quote}
+ 
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    (b) The \& boy \& who \& lived \\
+  \end{deptext}
+     \depedge{2}{1}{det}
+   \depedge{2}{4}{acl:relcl}
+   \depedge[edge below]{4}{2}{\textbf{nsubj}}
+  \depedge[edge below]{2}{3}{\textbf{ref}}
+\end{dependency}
+\end{center}
+\end{quote}
+ 
+ 
+%%% Relative clauses
+
+
+ 
+ 
+\section{Generating dependency trees and graphs}
+
+There exist multiple ways to obtain trees and graphs in the various UD representations for
+a given sentence. The \textit{basic} UD trees can be either generated directly by using a dependency 
+parser or by using a constituency parser followed by a converter from phrase structure to dependency
+trees. The \textit{enhanced} and \textit{enhanced++} dependency graphs can be obtained by 
+post-processing \textit{basic} dependency trees. 
+
+In the following two sections, we describe our converter from phrase structure 
+to \textit{basic} English UD trees and how to obtain \textit{enhanced} and \textit{enhanced++} 
+dependency graphs from \textit{basic} English UD trees.
+
+\subsection{Converting to \textit{basic} dependencies}
+
+Our converter from phrase structure to dependency trees is based 
+on the Stanford Dependencies converter \cite{demarneffe2006generating} which we
+updated according to the English Universal Dependencies guidelines.
+
+To determine the structure of the dependency tree, we use a semantic head finder which operates 
+similarly to the Collins head finder \cite{collins1999head}. For each constituent type,
+we define a set of rules that determine from which of its children the constituent inherits its head;
+terminal nodes have their surface token as head. These rules are mostly conditions 
+on the constituent type of the child but unlike the classic Collins head finder rules, some of them 
+also take surface tokens into account which is necessary for distinguishing between main verbs and auxiliaries. 
+We traverse the constituency tree in depth-first order and use these rules to obtain and store the head of each constituent, resulting in 
+a tree in which every node has exactly one surface token as head. The head of each token is then simply the head of its
+lowest ancestor whose head is not the token itself.
+
+To determine the relation types, we define for each grammatical relation a set of
+tree patterns in the form of \texttt{tregex} expressions \cite{levy2006tregex}. For each head-dependent pair
+we try to find a pattern that matches the subtree rooted at the lowest common ancestor of the 
+head and the dependent. If such a pattern exists, we assign its corresponding grammatical relation to
+the head-dependent pair. In the rare cases where no pattern matches, we assign the most general relation 
+\textit{dep}.
+
+
+
+This procedure allows us to obtain correct dependency trees in most cases.
+Two phenomena, however, require additional consideration.  First, as previously mentioned, the UD representation 
+defines several multi-word expressions
+with function words that behave like a single word such as \textit{because of} or \textit{in case}. Extracting the correct structure
+for these expressions is often challenging because many of these expressions are not a constituent according to the 
+Penn Treebank annotation guidelines \cite{marcus1993building}. We resolve this issue by preprocessing all phrase structure 
+trees that contain multi-word expressions such that the entire expression forms a constituent. 
+
+Second, the outlined procedure often attaches wh-words in questions to the wrong head. 
+For a question such as \textit{What does Peter seem to have?}, 
+our procedure would attach \textit{what} to the head of the matrix clause, \textit{seem},
+instead of the head of the embedded clause, \textit{have}. 
+If we were only concerned with converting manually annotated treebanks, we could resolve these ambiguities
+by making use of  the indexed empty nodes in the phrase structure trees, as proposed by \newcite{choi2012guidelines}.
+However, the output of most constituency parsers does not contain these empty nodes. Therefore, we try to solve 
+this issue by considering the selectional restrictions of the verb in the matrix clause and if the attachment of the wh-word
+violates these restrictions we try to reattach it to the head of the embedded clause.
+
+
+\subsection{Converting to \textit{enhanced} and \textit{enhanced++} dependencies}
+
+For the conversion from \textit{basic} dependencies to \textit{enhanced} and \textit{enhanced++} dependencies
+we mainly rely on dependency tree patterns in the form of \texttt{Semgrex} expressions \cite{chambers07learning}. \texttt{Semgrex} 
+expressions allow one to match subgraphs of a dependency graph based on properties of the nodes and their relations.
+
+For most of the enhancements, we search for syntactic patterns and then either modify the relation name or introduce new relations.
+The multi-word prepositions and the quantificational constructions, however, do not match any distinct dependency patterns. For these 
+modifications, we rely on lists of specific expressions and modify the graph structure whenever we encounter one of them.
+
+Our converter generates \textit{enhanced} and \textit{enhanced++} dependency graphs as described in the previous sections, with one exception.
+Currently, we don't propagate object or nominal modifier relations in clauses with conjoined verb phrases such as ``\textit{the store buys and sells cameras}''.
+The reason for this is that there are also many cases such as ``\textit{she was reading or watching a movie}'' where it would be wrong to add these relations
+and there are no syntactic cues that would allow us to distinguish these cases. \newcite{nyblom2013predicting} successfully used a machine learning approach
+to solve this problem for Finnish but as there currently exists no corpus annotated with \textit{enhanced} English UD graphs, we leave this to future work.
+
+\subsection{Evaluation}
+
+We evaluate our basic converter against the manually checked English UD treebank v1.1 
+\cite{UD} which contains annotations for all sentences in the EWT corpus (English
+Web Treebank, Linguistic Data Consortium release LDC2012T13). We convert all 
+phrase structure trees in the EWT corpus to \textit{basic} UD trees and compare 
+the output with the manually checked trees using the official CoNLL Shared Task 
+evaluation script. 
+
+The results of this evaluation are presented in Table \ref{tbl:results}.
+These results indicate that our converter is able to convert phrase structure trees from a variety of genres
+ to \textit{basic} UD trees at high accuracy. If we compare the performance of the converter across 
+the individual genres, we can see that the converter performs best on sentences from 
+weblogs and newsgroups and slightly worse on sentences from emails, from an online 
+question-answering site, and from online business reviews. A qualitative error analysis showed 
+that the main reason for the small drop in performance on the question-answer and review corpora 
+is that these corpora contain a lot of ungrammatical sentences written by non-native English speakers.
+The main reason for the lower performance of the converter on the email corpus is that 
+this corpus contains a lot of corporate email signatures whose corresponding 
+phrase structure trees consist of a single flat fragment from which it is very hard to extract properly
+structured dependency trees. 
+
+\begin{table}
+\begin{center}
+\begin{tabularx}{\columnwidth}{ l | c | c | c}
+\toprule
+\textbf{Genre} & \textbf{\ \ LAS \  \ } & \textbf{ \ \ UAS \ \ } & \textbf{Accuracy} \tabularnewline
+\midrule
+Question-answers & 92.0 &  95.4 & 93.7 \tabularnewline
+Email & 91.4 & 95.8 & 92.7 \tabularnewline
+Newsgroups & 93.1 & 96.8 & 94.0 \tabularnewline
+Business reviews & 92.5 & 95.9 & 93.9 \tabularnewline
+Weblogs & 94.5 & 97.1 & 95.7 \tabularnewline
+\midrule
+Entire corpus & 92.6 & 96.1 & 93.9 \tabularnewline
+\bottomrule
+\end{tabularx}
+\end{center}
+\caption{\label{tbl:results}  Labeled attachment 
+score (LAS), unlabeled attachment score (UAS), and accuracy of the converter from phrase structure trees to \textit{basic} 
+English UD trees on the individual genres of the English Web Treebank corpus. 
+We use the manually corrected English UD corpus v1.1 \cite{UD} as a gold standard.
+}
+
+
+
+\end{table}
+
+\subsection{Applications}
+
+We believe there are two main applications of our converters. First, our \textit{basic} UD converter 
+can be used to automatically convert existing treebanks of phrase structure trees to treebanks of 
+UD trees for training dependency parsers. For example, we have successfully converted the entire Penn Treebank \cite{marcus1993building}
+to train models for a neural network dependency parser \cite{chen2014fast}.
+
+Second, our converters can be used either in combination with a constituency parser or a dependency parser to obtain 
+UD graphs for any sentence which can then be utilized in downstream NLU tasks. \newcite{schuster2015generating}, for example,
+used a preliminary version of the converter to obtain \textit{enhanced++} UD graphs from constituency trees. 
+This system uses the UD graphs as input for a parser from image descriptions to a scene representation
+that captures relationships between objects in a visual scene. Further, the open domain information
+extractor in CoreNLP \cite{angeli2015leveraging} also already uses UD graphs to extract relations between entities.
+%Considering the wide range of NLU systems which made use of \textit{collapsed} and \textit{CCprocessed} SD graphs,
+%we expect to see 
+
+
+
+
+\section{Comparison to AMR}
+
+Representing the meaning of sentences as directed graphs has a long tradition in computational linguistics, which goes back to at least \newcite{shieber1984design}. One graph-based semantic representation that received significant attention in recent years is the Abstract Meaning Representation (AMR) \cite{banarescu2013abstract}.  AMR also encodes sentences as directed graphs but compared to UD graphs, it aims to abstract further away from the surface form of sentences. To achieve this goal, it encodes sentences using PropBank framesets \cite{palmer2005proposition} and approximately 100 fixed relations. This makes AMR a deeper and more canonicalized semantic representation as compared to UD graphs. While these are obviously desirable properties, we nevertheless believe that our representation has some advantages over AMR, especially when it is being used in shallow natural language understanding tasks.
+
+In terms of expressivity, UD graphs have the advantage that they encode the meaning of sentences in terms of relations between surface form tokens and they are therefore as expressive as natural language. The expressivity of AMR, on the other hand, is constrained by the finite set of PropBank framesets. This is particularly problematic for neologisms such as \textit{to venmo} for which no corresponding PropBank framesets exist.
+
+Further, we are using existing resources of languages to disambiguate argument types, e.g., by including the preposition in the relation name of nominal modifiers, which avoids many hard labeling decisions for parsers as well as for human annotators. While this approach is occasionally too simplistic as our representation does not, for example, distinguish between comitative \textit{with} and instrumental \textit{with}, it nevertheless sufficiently disambiguates argument types for most domain-specific NLU tasks. AMR, on the other hand, requires the labeling of every argument with a semantic role which is - apart from labeling agents and patients - a very hard task. 
+
+Another appeal of UD graphs is their simplicity. A lot of the frequent relations, such as \textit{nominal subject} or \textit{object} are very intuitive which makes them easily interpretable by non-experts. Compared to UD graphs, AMR graphs are more complex and require more explanation even if one is only interested in extracting simple relations such as subject-verb-object triplets.
+
+Finally, from a practical point of view, sentences can be parsed to UD graphs with much higher accuracy than to AMR graphs. While the existence of high-performing parsers clearly should not be the main desideratum in the design of a semantic representation, this aspect plays ultimately an important role in the usefulness of a representation.
+
+
+
+\section{Limitations}
+
+As explained above, most of the additional relations in the \textit{enhanced} and \textit{enhanced++} representations can be added with syntactic rules. This purely syntactic approach tends to work well in practice, and has the appeal of being very simple and easily comprehensible. However, in some cases this approach leads to UD graphs that encode a different meaning than the original sentence, which
+can be problematic in downstream NLU tasks.
+
+One issue concerns clauses with generalized quantifiers and controlled verbs, such as the following sentence\footnote{Thanks to Christopher Potts for pointing out this issue.}.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    Everybody \& wants \& to \& buy \& a \& house \\
+  \end{deptext}
+  \depedge{2}{1}{nsubj}
+  \depedge[edge below, edge unit distance=1.5ex]{4}{1}{{nsubj:xsubj}}
+  \depedge{2}{4}{xcomp}
+  \depedge{4}{3}{mark}
+  \depedge{4}{6}{dobj}
+  \depedge{6}{5}{det}
+\end{dependency}
+\end{center}
+\end{quote}
+
+The issue with this UD graph is that it does not encode the meaning of the original
+sentence but instead encodes approximately the meaning of the sentence
+\textit{``Everybody wants that everybody buys a house''}.
+In order to preserve the original meaning and to encode the relation between the controlled
+verb and its subject we would have to introduce variables and consequently abandon
+one of our core principles, namely that we encode the meaning of a sentence in terms of 
+relations between surface form tokens.
+
+A second issue concerns the propagation of dependents. Note that in the case of conjoined verbs
+or verb phrases, we are effectively performing a reverse conjunction reduction which can lead
+to problematic analyses in combination with generalized quantifiers. For example, consider the 
+sentence \textit{``Everybody sleeps or is awake''} with the following \textit{enhanced} UD graph.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    Everybody \& sleeps \& or \& is \& awake \\
+  \end{deptext}
+  \depedge{2}{1}{nsubj}
+  \depedge[edge below, edge unit distance=0.5ex]{5}{1}{{nsubj}}
+  \depedge{2}{5}{conj:or}
+  \depedge{5}{4}{cop}
+  \depedge{2}{3}{cc}
+\end{dependency}
+\end{center}
+\end{quote}
+
+The issue with this UD graph is that it approximately encodes the meaning
+of the sentence \textit{``Everybody sleeps or everybody is awake''} which again differs
+from the meaning of the original sentence.
+
+Lastly, another issue concerns sentences with conjoined subjects, such as \textit{``Sue and Mary are carrying a piano''}.
+
+\begin{quote}
+\begin{center}
+\begin{dependency}[column sep=0.2em, edge unit distance=2.25ex]
+  \begin{deptext}
+    Sue \& and \& Mary \& are \& carrying \& a \& piano \\
+  \end{deptext}
+  \depedge{5}{1}{nsubj}
+  \depedge[edge below, edge unit distance=1.5ex]{5}{3}{{nsubj}}
+  \depedge{1}{3}{conj:and}
+  \depedge{1}{2}{cc}
+  \depedge{5}{7}{dobj}
+  \depedge{7}{6}{det}
+    \depedge{5}{4}{aux}
+\end{dependency}
+\end{center}
+\end{quote}
+
+Unlike in the previous two examples, the issue with this UD graph is not that it encodes a different meaning than the original sentence, 
+but rather that this representation of conjoined subjects favors a distributive interpretation. Ideally, we would propagate 
+the subject relation only when it is clear that a distributive interpretation is intended, but as the question whether a conjoined subject should be interpreted distributively or collectively also depends on world knowledge and the context, we are not able to make this distinction based on
+the information that is contained in a single sentence.
+
+%The second issue regarding the spreading of conjuncts is that it seems to favor a distributive
+%interpretation of conjoined subjects. If a 
+
+\section{Conclusion}
+
+In this paper, we presented the first detailed account of an \textit{enhanced} 
+English Universal Dependencies representation. We further argued for additional
+modifications of the tree structure to facilitate extracting relations between 
+content words and described these modifications as part of the \textit{enhanced++}
+representation. Finally, we described how both of these representations can be 
+automatically generated from phrase structure trees or \textit{basic} dependency trees
+with high accuracy.
+
+
+\section{Acknowledgements}
+
+This work greatly benefitted from many improvements 
+to the original Stanford Dependencies
+converter by Marie-Catherine de Marneffe 
+and John Bauer, which we gratefully acknowledge. We also
+thank Natalia Silveira and Timothy Dozat for helpful discussions, and
+the entire Universal Dependencies community for developing 
+the guidelines and their valuable input. This work was supported in part by a gift from IPSoft, Inc. The first
+author is also supported by a Goodan Family Graduate Fellowship.  
+
+
+
+\section{Bibliographical References}
+\label{main:ref}
+
+\bibliographystyle{lrec2016}
+\bibliography{references}
+
+
+%\section{Language Resource References}
+%\label{lr:ref}
+%\bibliographystylelanguageresource{lrec2016}
+%\bibliographylanguageresource{xample}
+
+\end{document}

@@ -1,0 +1,1011 @@
+%
+% File nodalida2017.tex
+%
+% Contact beata.megyesi@lingfil.uu.se
+%
+% Based on the instruction file for Nodalida 2015 and EACL 2014
+% which in turn was based on the instruction files for previous 
+% ACL and EACL conferences.
+
+\documentclass[11pt]{article}
+\usepackage{nodalida2017}
+%\usepackage{times}
+\usepackage{mathptmx}
+%\usepackage{txfonts}
+\usepackage{url}
+\usepackage{tikz-dependency}
+\usepackage{gb4e}
+\usepackage{latexsym}
+\usepackage{cmll}
+\special{papersize=210mm,297mm} % to avoid having to use "-t a4" with dvips 
+%\setlength\titlebox{6.5cm}  % You can expand the title box if you really have to
+
+\newenvironment{myquote}%
+  {\list{}{\leftmargin=0.0in\rightmargin=0.0in}\item[]}%
+  {\endlist}
+
+\newcounter{excounter}
+
+
+\title{Gapping Constructions in Universal Dependencies v2}
+
+
+\author{Sebastian Schuster \\
+\\
+ \\
+\\
+ \\\And
+  Matthew Lamm \\
+    Department of Linguistics and Department of Computer Science\\
+  Stanford University, Stanford, CA 94305 \\
+  {\tt \{sebschu,mlamm,manning\}@stanford.edu} \\\And
+Christopher D. Manning \\
+    \\
+   \\
+   \\
+  \\}
+
+\date{}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+
+In this paper, we provide a detailed account of sentences 
+with gapping such as ``\textit{John likes tea, 
+and Mary coffee}'' within the Universal Dependencies (UD) 
+framework. We explain how common gapping constructions 
+as well as rare complex constructions can be analyzed 
+on the basis of examples in Dutch, English, Farsi, German, 
+Hindi, Japanese, and Turkish. We further argue why the adopted 
+analysis of these constructions in UD version 2 is better suited for 
+annotating treebanks and parsing than previous proposals, and we 
+discuss how gapping constructions can be analyzed in the \textit{enhanced} 
+UD representation, a graph-based semantic representation for 
+shallow computational semantics tasks.
+  
+\end{abstract}
+
+\section{Introduction}
+An important property of natural languages is that speakers can sometimes 
+omit redundant material. One example of this phenomenon is so-called 
+gapping constructions \cite{Ross1970}. In such constructions, speakers elide a 
+previously mentioned verb that takes multiple arguments, which leaves behind 
+a clause without its main predicate. For example, in the sentence ``\textit{John likes tea, 
+and Mary coffee}'', the verb \textit{likes} was elided from the second conjunct. 
+
+Sentences with gapping pose practical as well as theoretical 
+challenges to natural language processing tasks. From a practical point of view, 
+it is challenging for natural language processing systems to resolve the gaps, 
+which is necessary to interpret these sentences and extract information from 
+them. Further, these sentences are hard for statistical parsers to parse as part 
+of their structure deviates significantly from canonical clause structures.
+
+From a more theoretical point of view, these constructions pose challenges to 
+designers of dependency representations. Most dependency representations
+that are used in natural language processing systems
+(e.g., the adaptation of \newcite{Melcuk1988} for the CoNLL-08 shared task 
+\cite{Surdeanu2008}; \newcite{DeMarneffe2006}; \newcite{Nivre2016}) 
+are concerned with providing surface syntax descriptions without stipulating 
+any additional transformations or empty nodes. Further, virtually all dependency 
+representations consider a verb (either the inflected or the main verb) to be the 
+head of a clause. Consequently, the verb governs all its arguments and modifiers. 
+For these reasons, it is challenging to find a good representation of clauses in which 
+a verb that has multiple dependents was elided, because it is not obvious where 
+and how the remaining dependents should be attached in these cases.
+
+In recent years, the Universal Dependencies (UD) representation \cite{Nivre2016} 
+has become the dominant dependency representation for annotating treebanks in 
+ a large variety of languages. The goal of the UD project is to provide guidelines for 
+cross-linguistically consistent treebank annotations for as many languages as 
+possible. Considering that gapping constructions appear in many languages, 
+these guidelines necessarily also have to include guidelines on how to analyze 
+gapping constructions. While the official guidelines\footnote{See {http://universaldependencies.org/u/overview/specific-syntax.html\#ellipsis}. The first and the last author were both involved in developing these guidelines.} 
+provide basic instructions for the 
+analysis of gapping constructions, they lack a detailed discussion of 
+cross-linguistically attested gapping constructions and a thorough explanation 
+why the adopted guidelines should be preferred over other proposals. The purpose 
+of the present paper is therefore to discuss in detail how different gapping 
+constructions can be analyzed in a variety of languages and to provide a theoretical 
+comparison of different proposals based on these examples. We further discuss 
+how gapping constructions should be represented in the \textit{enhanced} Universal 
+Dependencies representation, which aims to be a better representation for shallow 
+natural language understanding tasks and how these design choices can potentially 
+help in downstream tasks.
+
+For the purpose of this paper, we consider constructions in which 
+a verb that has multiple dependents was elided, including classic cases of gapping 
+\cite{Ross1970}.
+%but also some cases of right node raising \cite{Postal1974}, and some 
+%constructions with phrasal verbs. 
+Throughout this paper, we call the elided material 
+(a verb and occasionally also some of its arguments) the \textsc{gap}. Further, we refer 
+to the dependents of the gap as \textsc{orphans} or \textsc{remnants}, and we refer to 
+the dependents of the verb in the clause with the overt verb as the 
+\textsc{correspondents}, as illustrated with the following annotated sentence.
+
+\begin{myquote}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}[column sep=-0.02cm]
+      John \& likes \& tea \& and \& Mary \& coffee \\
+      \textsc{corre-} \& \textsc{overt} \& \textsc{corre-} \& \& \textsc{orphan}/ \& \textsc{orphan}/ \\
+      \textsc{spondent} \& \textsc{verb} \& \textsc{spondent}  \& \& \textsc{remnant} \& \textsc{remnant}  \\
+    \end{deptext}
+  \end{dependency}
+\end{myquote}
+
+\section{Coordination, ellipsis, and gapping in UD v2}
+
+Before we discuss how gapping constructions are analyzed in UD v2, 
+we give a brief overview how UD analyzes coordinated clauses and 
+other forms of elliptical constructions.
+
+Coordinated clauses are analyzed like all other types of coordination:
+By convention, the head of the first conjunct is always the head of the 
+coordinated construction and all other conjuncts are attached to the head 
+of the first conjunct with a \texttt{conj} relation. If there is an overt 
+coordinating conjunction, it is attached to the head of the succeeding 
+conjunct. This captures the fact that the coordinating 
+conjunction forms a syntactic unit with the succeeding conjunct 
+\cite{Gerdes2015}. A sentence with two coordinated clauses is then 
+analyzed as follows.
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:coord}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}[column sep=0.2cm]
+      (\theexcounter) \& John \& drinks \& tea \& and \& Mary \& eats \& cake \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge[edge unit distance=3ex]{7}{5}{cc}
+    \depedge{7}{6}{nsubj}
+    \depedge[edge unit distance=2ex]{3}{7}{conj}
+    \depedge{7}{8}{obj}
+  \end{dependency}
+\end{myquote}
+
+For constructions in which a head nominal was elided, UD promotes the highest
+ dependent according to the hierarchy \texttt{amod} $>$ \texttt{nummod} $>$ \texttt{det} 
+ $>$ \texttt{nmod} $>$ \texttt{case}. The promoted dependent is attached to the governor 
+ of the elided nominal with the same relation that would have been used if the nominal 
+ had not been elided. All the other dependents of the elided noun are attached to the 
+ promoted dependent with their regular relations. For example, in the second conjunct 
+ of the following sentence, the head noun \textit{bird} was elided. We therefore promote 
+ the determiner \textit{some} to serve as the object of \textit{saw}.
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:nom-ellipsis}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.1cm]
+      (\theexcounter) \& She \& saw \& every \& bird \& but \& he \& saw \& only \& some \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{5}{4}{det}
+    \depedge{3}{5}{obj}
+    \depedge{8}{6}{cc}
+    \depedge{8}{7}{nsubj}
+    \depedge[edge unit distance=1.85ex]{3}{8}{conj}
+    \depedge{10}{9}{advmod}
+    \depedge{8}{10}{obj}
+  \end{dependency}
+\end{myquote}
+
+In some cases of ellipsis, a verb phrase is elided but there is still an overt copula or auxiliary 
+verb. In these cases, we promote the copula or auxiliary verb to be the head of the clause 
+and attach all orphans to the auxiliary.
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:vp-ellipsis}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.2cm]
+      (\theexcounter) \& Sue \& likes \& pasta \& and \& Peter \& does \& , \& too  \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{7}{5}{cc}
+    \depedge{7}{6}{nsubj}
+    \depedge[edge unit distance=2ex]{3}{7}{conj}
+    \depedge[edge unit distance=1ex]{7}{9}{advmod}
+  \end{dependency}
+\end{myquote}
+
+For the constructions we are mainly concerned with in this paper, i.e., gapping 
+constructions in which the governor of multiple phrases was elided, UD v2 adopts 
+a modified version of a proposal by \newcite{Gerdes2015}. We promote the orphan 
+whose grammatical role dominates all other orphans according to an adaptation of the 
+obliqueness hierarchy,\footnote{
+Our adaptation prioritizes phrasal over clausal dependents. 
+Translated to UD relations, our adaptation of the obliqueness 
+hierarchy is as follows: \texttt{nsub}j $>$ \texttt{obj} $>$ \texttt{iob}j $>$ \texttt{obl} $>$ 
+\texttt{advmod} $>$ \texttt{csubj} $>$ \texttt{xcomp} $>$ \texttt{ccomp} $>$ \texttt{advcl}. 
+See, for example, \newcite{Pollard1994} for a motivation behind this ordering.} to be the 
+head of the conjunct. The motivation behind using such a hierarchy instead of 
+a simpler strategy such as promoting the leftmost phrase is that it leads 
+to a more parallel analysis across languages that differ in word order.
+We attach all other orphans except for coordinating conjunctions 
+using the special \texttt{orphan} relation. Coordinating conjunctions are attached to the 
+head of the following conjunct with the \texttt{cc} relation. This leads to the analysis 
+in (\ref{ex:en-gap-1}) of a sentence with three conjuncts of which two contain a gap.
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-1}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}[column sep=0.1cm]
+      (\theexcounter) \& Sue \& \textbf{ate} \& meat \& , \& Paul \& fish \& , \& and \& Mary \& noodles \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge[edge unit distance=2ex]{3}{6}{conj}
+    \depedge{3}{4}{obj}
+    \depedge{6}{7}{orphan}
+    \depedge{10}{9}{cc}
+    \depedge[edge unit distance=1.25ex]{3}{10}{conj}
+    \depedge{10}{11}{orphan}
+  \end{dependency}
+\end{myquote}
+
+The motivation behind using a special \texttt{orphan} relation 
+is that it indicates that the clause contains a gap.
+If we used a regular relation, it might not be clear that a predicate was elided. 
+For example, if instead, we attached the orphaned subject to the orphaned object using an \texttt{nsubj} relation, 
+one could confuse gapping constructions with copular constructions, especially in languages with zero-copula.
+
+In the rest of this paper, we argue in favor of this proposal for several reasons. First, as we show in the following section, it can
+be used to analyze a wide range of gapping constructions in many different languages. Second, 
+as we argue in Section~\ref{sec:structure}, there is evidence that the conjunct with the gap forms a syntactic unit,
+and this fact is captured by the adopted analysis. Finally, as  discussed in Section~\ref{sec:comparison}, this representation is
+potentially better suited for automatic parsing than previous proposals.
+
+\section{Gapping constructions}
+
+We now discuss how a range of attested gapping constructions 
+in a variety of languages can be analyzed according to the above proposal.
+
+
+\subsection{Single verbs}
+
+The most common form of gapping constructions are two or more conjoined clauses
+in which a single inflected verb is missing in all but one of the conjuncts. As illustrated
+in (\ref{ex:en-gap-1}), in SVO languages such as English, the overt verb typically 
+appears in the first conjunct and is elided from all subsequent conjuncts. In languages 
+with other word orders, the overt verb can also appear exclusively in the last conjunct.
+For example, in the following sentence in Japanese (an SOV language), the verb appears 
+in the last conjunct and the gap in the first conjunct.
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:jp-gap-1}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}
+     (\theexcounter) \& John-ga \& hon-o \& sosite  \& Mary-ga \& hana-o \& \textbf{katta} \\
+     \& John  \& book \&  and \& Mary \& flower \& bought \\
+    \end{deptext}
+    \depedge{2}{3}{orphan}
+    \depedge[edge unit distance=2.0ex]{2}{7}{conj}
+    \depedge{7}{4}{cc}
+    \depedge{7}{5}{nsubj}
+    \depedge{7}{6}{obj}
+  \end{dependency}
+  \trans `John bought books, and Mary flowers.' \hfill \cite{Kato2006}
+\end{myquote}
+
+In some languages with flexible word orders such as Turkish, the overt verb can appear 
+in the first or the last conjunct. The orphans typically appear in the same order as the 
+correspondents in the other conjunct as in (\ref{ex:tr-gap-1}a-d) \cite{Bozsahin2000}.
+
+\begin{myquote}
+  \footnotesize
+  \refstepcounter{excounter}
+  \label{ex:tr-gap-1}
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}
+     (\theexcounter) a. \& Adam \& kitab\i \& \c{c}ocuk  \& da \& dergiyi \& \textbf{okudu} \\
+     \& man  \& book \&  child \& \textsc{conj} \& magazine \& read \\
+     \&  S \& O \& S \&  \& O \& V  \\
+    \end{deptext}
+    \depedge{2}{3}{orphan}
+    \depedge[edge unit distance=2ex]{2}{7}{conj}
+    \depedge{7}{5}{cc}
+    \depedge{7}{4}{nsubj}
+    \depedge{7}{6}{obj}
+  \end{dependency}
+  
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.1cm]
+     \ \ \ \ \ b. \& Kitab\i \&  adam\& dergiyi \& de\&  \c{c}ocuk  \& \textbf{okudu} \\
+     \&  O \&S \& O \&  \& S \& V  \\
+    \end{deptext}
+    \depedge{3}{2}{orphan}
+    \depedge[edge unit distance=2.5ex]{3}{7}{conj}
+    \depedge{7}{5}{cc}
+    \depedge{7}{4}{obj}
+    \depedge{7}{6}{nsubj}
+  \end{dependency}
+  
+  \begin{dependency}
+    \begin{deptext}[column sep=0.1cm]
+      \ \ \ \ \ c. \& Adam \&  kitab\i  \& \textbf{okudu} \&  \c{c}ocuk  \&  da \& dergiyi \&   \\
+     \&  S \&O \& V \& S \&  \& O  \\
+    \end{deptext}
+    \depedge{4}{2}{nsubj}
+    \depedge[edge unit distance=1.85ex]{4}{5}{conj}
+     \depedge{4}{3}{obj}
+    \depedge{5}{6}{cc}
+    \depedge{5}{7}{orphan}
+  \end{dependency}
+
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.1cm]
+      \ \ \ \ \ d. \& Kitab\i   \& adam  \& \textbf{okudu} \& dergiyi   \&  de \& \c{c}ocuk  \&   \\
+      \&  O \&S \& V \& O \&  \& S  \\
+    \end{deptext}
+    \depedge{4}{2}{obj}
+    \depedge{4}{7}{conj}
+    \depedge{4}{3}{nsubj}
+    \depedge{7}{5}{orphan}
+    \depedge{7}{6}{cc}
+  \end{dependency}
+  \trans `The man read the book, and the child the magazine.'  \\ \null \hfill \cite{Bozsahin2000}
+\end{myquote}
+As mentioned above, in order to achieve higher cross-linguistic consistency, 
+the first conjunct is always the head of a coordinated structure in UD. Therefore, 
+the head of the first conjunct is always the head of the coordination, but the internal 
+structure of each conjunct is the same for all four variants in (\ref{ex:tr-gap-1}).
+
+In some cases, e.g., in certain discourse settings, the clause with the gap is not part 
+of the same sentence as the clause with the overt verb \cite{Gerdes2015}. In these 
+cases, we promote one of the orphans to be the root of the second sentence; the 
+internal structure of the two clauses is the same as when they are part of an intra-sentential 
+coordination.
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-2}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}[column sep=0.3cm]
+      (\theexcounter) \& Sue \& \textbf{likes} \& coffee. \& And \& Paul  \& tea. \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{6}{7}{orphan}
+    \depedge{6}{5}{cc}
+  \end{dependency}
+\end{myquote}
+
+Further, conjuncts with a gap can also contain additional types of arguments or modifiers. 
+For example, in the sentence in (\ref{ex:en-gap-3}), the oblique modifier \textit{for good} 
+does not correspond to any phrase in the first conjunct.
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-3}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.0ex]
+    \begin{deptext}[column sep=0.1cm]
+     (\theexcounter) \& They \& \textbf{had} \& \textbf{left} \& the \& company \& , \& many \& for  \& good \\
+    \end{deptext}
+    \depedge{4}{2}{nsubj}
+    \depedge{4}{6}{obj}
+    \depedge{4}{8}{parataxis}
+    \depedge{8}{10}{orphan}
+  \end{dependency}
+  \end{myquote}
+
+\begin{figure*}
+  \begin{center}
+    \refstepcounter{excounter}
+    \label{ex:farsi-gap-1}
+    \footnotesize
+    \begin{dependency}[edge unit distance=2.5ex]
+      \begin{deptext}
+        (\theexcounter) \& Mahs\=a \& in \& ket\=ab \& ro \& \textbf{dust} \& d\=ar-e \& va \& Minu \& mi-dun-e \& ke \& m\=am\=an-esh \& un \& ket\=ab \& ro \\
+        \& Mahsa \&this \& book \& \textsc{obj} \& like \& have \& and \& Minu \& know \& that \& mother \& that \& book \&  \textsc{obj} \\
+      \end{deptext}
+      \depedge{6}{2}{nsubj}
+      \depedge{6}{4}{obj}
+      \depedge{4}{5}{case}
+      \depedge{10}{8}{cc}
+      \depedge{10}{9}{nsubj}
+      \depedge{6}{10}{conj}
+      \depedge{10}{12}{ccomp}
+      \depedge{12}{14}{orphan}
+      \depedge{14}{15}{case}
+    \end{dependency}
+    \trans `Mahsa likes this book and Minu knows that her mother (likes) that book' \cite{Farudi2013}
+  \end{center}
+  \caption{Basic UD tree of a Farsi sentence with a gap within an embedded clause.}
+  \label{fig:farsi-embedded}
+\end{figure*}
+
+
+\subsection{Verbs and their arguments or modifiers}
+
+Many languages also allow gapping of verbs along with their arguments 
+or modifiers as illustrated in the following two examples in Hindi (\ref{ex:hindi-gap-1}) 
+and English (\ref{ex:en-gap-4}).
+
+
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:hindi-gap-1}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.1cm]
+      (\theexcounter)  \& M. \& ne \& P. \& ko \& \textbf{kitaab} \& \textbf{dii} \& aur \&  T. \& ne \& V. \& ko  \\
+      \&          M. \& \tiny{\textsc{erg}} \& P. \& \tiny{\textsc{obj}} \& book \& give \& and \& T. \& \tiny{\textsc{erg}} \& V. \&  \tiny{\textsc{obj}}  \\
+     \end{deptext}
+     \depedge{2}{3}{case}
+     \depedge{7}{6}{obj}
+     \depedge[edge unit distance=2ex]{7}{2}{nsubj}
+     \depedge{4}{5}{case}
+     \depedge{7}{4}{obl}
+     \depedge{7}{9}{conj}
+     \depedge{9}{8}{cc}
+     \depedge{9}{11}{orphan}
+     \depedge{9}{10}{case}
+     \depedge{11}{12}{case}
+  \end{dependency}
+  \trans `Manu gave a book to Pari and Tanu to Vimla' \hfill \cite{Kush2016}
+\end{myquote}
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-4}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.085cm]
+      (\theexcounter) \& Sue \& \textbf{gave} \& \textbf{a} \& \textbf{book} \& to \& Paul \& and \& John \& to \& Mary \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge[edge unit distance=1.75ex]{3}{9}{conj}
+    \depedge{9}{8}{cc}
+    \depedge{9}{11}{orphan}
+    \depedge{3}{5}{obj}
+    \depedge[edge unit distance=2ex]{3}{7}{obl}
+  \end{dependency}
+\end{myquote}
+We analyze these cases as analogous to sentences in which only a verb was elided. 
+The subject is promoted to be the head of the second conjunct and the oblique 
+argument is attached with an \texttt{orphan} dependency.
+
+\subsection{Verbs and clausal complements}
+
+\newcite{Ross1970} points out that gaps can also correspond to a finite
+verb and one or more embedded verbs. For example, in the following 
+sentence, it is possible to elide the matrix verb and all or some of the embedded verbs. 
+\begin{exe}
+  \footnotesize
+  \setcounter{xnumi}{\value{excounter}}
+  \stepcounter{excounter}
+  \ex \label{ex:non-fin-embedded}
+  I want to try to begin to write a novel, ...
+  \begin{xlist}
+    \ex ... and Mary to try to begin to write a play.
+    \ex ... and Mary to begin to write a play.
+    \ex ... and Mary to write a play.
+    \ex ... and Mary a play. \hfill \newcite{Ross1970}
+  \end{xlist}
+\end{exe}
+In all of these variants, the matrix verb was elided from the second conjunct. 
+While this is an example of subject control and therefore \textit{Mary} is also the 
+subject of all the embedded verbs, it would be misleading to attach \textit{Mary} to 
+one of the embedded verbs because this would hide the fact that the matrix verb 
+was elided. For this reason, we treat \textit{Mary} as the head of the second conjunct 
+and attach the remainder of the embedded clause with an \texttt{orphan} relation.
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-5}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.3cm]
+      (\theexcounter) \& ... \& and \& Mary \& to \& write \& a \& play. \\
+    \end{deptext}
+      \depedge{2}{4}{conj}
+      \depedge{4}{3}{cc}
+      \depedge{4}{6}{orphan}
+      \depedge{6}{8}{obj}
+  \end{dependency}
+\end{myquote}
+
+\subsection{Non-contiguous gaps}
+
+In the previous examples, the gap corresponds to a contiguous sequence in 
+the first conjunct. However, as highlighted by the following examples, this is 
+not always the case.
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-6}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}
+      (\theexcounter) \& Arizona \& \textbf{elected} \& X \& \textbf{Senator} \& , \& and \& Florida \& Y \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge[edge unit distance=1.85ex]{3}{8}{conj}
+    \depedge{8}{7}{cc}
+    \depedge{8}{9}{orphan}
+    \depedge{3}{4}{obj}
+    \depedge{3}{5}{xcomp}
+  \end{dependency}
+  \\ \null \hfill (adapted from an example in \newcite{Jackendoff1971})
+\end{myquote}
+
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:persian-gap-1}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}
+      (\theexcounter) \& Farmehr \& be \& arus \& rose \& \textbf{d\={a}d} \& va \& Pari \& l\={a}le \\
+      \&         Farmehr  \& to  \& bride \& roses \& gave \& and \& Pari \& tulips \\
+    \end{deptext}
+    \depedge[edge unit distance=2.5ex]{6}{2}{nsubj}
+    \depedge{4}{3}{case}
+    \depedge{6}{4}{obl}
+    \depedge{6}{5}{obj}
+    \depedge{6}{8}{conj}
+    \depedge{8}{7}{cc}
+    \depedge{8}{9}{orphan}
+  \end{dependency}
+  `Farmehr gave roses to the bride and Pari (gave) tulips (to the bride).' \hfill \cite{Farudi2013}
+\end{myquote}
+
+While the interpretation of the second conjunct is only possible if one fills both gaps, 
+we are also in these cases primarily concerned with the elided verb because neither 
+of the phrases in the second conjunct depend on the second gap. We can therefore 
+analyze constructions with non-contiguous gaps in a similar manner as constructions 
+with contiguous gaps, namely by promoting one orphan to be the head of the conjunct 
+and attaching all other orphans to this head. 
+
+\subsection{Gaps in embedded clauses}
+
+\begin{figure*}
+  \refstepcounter{excounter}
+  \label{ex:de-gap-1}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=-0.05cm]
+      (\theexcounter) \& weil \& P. \& seinen \& Freund \& \textbf{besuchen} \& \textbf{wollte} \& , \& was \& mich \& beruhigte \& , \& und \& J. \& seine \& Kinder \& , \& was \& mich \& am\"usierte \\
+      \& because \& P. \& his \& friend \& visit \& wanted \& , \& which \& me \& reassured \& , \& and \& J. \& his \& children \& , \& which \& me \& amused \\
+    \end{deptext}
+    \depedge{7}{3}{nsubj}
+    \depedge{6}{5}{obj}
+    \depedge{7}{6}{xcomp}
+    \depedge{7}{11}{advcl}
+    \depedge{11}{10}{obj}
+    \depedge{11}{9}{nsubj}
+    \depedge[edge unit distance=2.0ex]{7}{14}{conj}
+    \depedge{14}{16}{orphan}
+    \depedge{20}{18}{nsubj}
+    \depedge{20}{19}{obj}
+    \depedge[edge unit distance=1.6ex]{14}{20}{orphan}
+  \end{dependency}
+  ``because Peter wanted to visit his friend which reassured me, and Johann (wanted to visit) his children, which amused me`` \\ \null \hfill \cite{Wyngaerd2007}
+  \caption{Basic UD tree of a German subordinate clause with an adverbial clause modifying a gap.}
+  \label{fig:ger-advcl}
+\end{figure*}
+
+
+\begin{figure*}
+\refstepcounter{excounter}
+\label{ex:nl-gap-1}
+\footnotesize
+\begin{dependency}
+ \begin{deptext}[column sep=-0.05cm]
+   (\theexcounter) \& Jan \& heeft \& met \& het \& meisje \& dat \& de \& rode \& en \& Piet \& heeft \& met \& de \& jongen \& die \& de \& witte \& \textbf{wijn} \& \textbf{binnenbracht} \& \textbf{gesproken} \\
+    \& Jan \& has \& with \& the \& girl \& who \& the \& red \& and \& Piet \& has \& with \& the \& boy \& who \& the \& white \& wine \& in-brought \& talked \\
+ \end{deptext}
+  
+  \depedge{3}{2}{nsubj}
+  \depedge[edge unit distance=1.95ex]{3}{6}{obl}
+  \depedge[edge unit distance=1.15ex]{3}{21}{conj}
+  \depedge{6}{7}{acl:relcl}
+  \depedge[edge unit distance=1.95ex]{7}{9}{orphan}
+  \depedge[edge unit distance=1.65ex]{21}{10}{cc}
+  \depedge[edge unit distance=1.55ex]{21}{11}{nsubj}
+  \depedge[edge unit distance=1.45ex]{21}{12}{aux}
+  \depedge[edge unit distance=1.65ex]{21}{15}{obl}
+  \depedge[edge unit distance=1.25ex]{20}{16}{nsubj}
+  \depedge[edge unit distance=1.6ex]{20}{19}{obj}
+  \depedge[edge unit distance=1.55ex]{15}{20}{acl:relcl}
+\end{dependency}
+
+`Jan (talked) to the girl who (brought in) the red (wine), and Piet talked to the boy who brought in the white wine.' \\ \null \hfill \cite{Wyngaerd2007}
+
+\caption{Basic UD tree of a Dutch sentence with a gap in a relative clause.}
+\label{fig:dutch-relcl}
+
+\end{figure*}
+
+
+\newcite{Farudi2013} notes that in Farsi, gaps can appear in embedded clauses even if 
+the corresponding verb in the first conjunct is not part of an embedded clause. For example, 
+in (\ref{ex:farsi-gap-1}) in Figure~\ref{fig:farsi-embedded}, \textit{dust} (`like') is the main verb 
+of the highest clause of the first conjunct but in the second conjunct, the verb was elided from 
+a clause embedded under \textit{mi-dun-e} (`think'). In these cases, we consider the matrix verb 
+to be the head of the second conjunct as we would if there was no gap, and we promote the 
+subject of the embedded clause (\textit{m\=am\=an-esh}) to be the head of the embedded clause. 
+We attach the remaining orphans to the subject with the \texttt{orphan} relation.
+
+
+
+Note that this construction is different from constructions in which parenthetical material \cite{Pollard1994}
+appears in the second conjunct, as in the following English example.
+
+\begin{exe}
+\footnotesize
+  \setcounter{xnumi}{\value{excounter}}
+  \stepcounter{excounter}
+  \ex {[...] I always had a pretty deep emotional connection to him, and I think he to me.\footnote{Source: hhttp://www.ttbook.org/book/transcript/transcript-humour-healing-marc-maron}}
+\end{exe}
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-10}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.4cm]
+      (\theexcounter) \& ... \& and \& I \& think \& he \& to \& me \\
+    \end{deptext}
+    \depedge{2}{6}{conj}
+    \depedge{6}{3}{cc}
+    \depedge{5}{4}{nsubj}
+    \depedge{6}{5}{orphan}
+    \depedge{8}{7}{case}
+    \depedge{6}{8}{orphan}
+  \end{dependency}
+\end{myquote}
+In these cases, we promote the subject of the second conjunct (\textit{he}) 
+and attach the parenthetical \textit{I think} as well as \textit{to him} to the subject.
+
+
+\subsection{Relative clauses}
+
+
+Several Germanic languages such as German and Dutch show more complex gapping behaviors in sentences with adverbial and relative clauses. For example, \newcite{Wyngaerd2007} points out that German also allows a verbal gap in clauses modified by an adverbial clause such as the one in Figure~\ref{fig:ger-advcl}. In this example, the two verbs \textit{besuchen wollte} (`wanted to visit') are missing from the second clause, which leaves three orphans, namely a subject, a direct object, and an adverbial clause without a governor. As in the case of two orphaned constituents, we promote the subject to be the head of the clause as it is the highest type of argument in the obliqueness hierarchy, and we attach the two other constituents to the subject with an \texttt{orphan} relation.
+
+Dutch even allows gaps to appear within relative clauses that modify a constituent in each of the conjuncts. In the example sentence in Figure~\ref{fig:dutch-relcl}, there are in total two elided verbs, and one elided noun. First, the left conjunct is missing the main verb \textit{gesproken} (`talked') in its matrix clause; second, the relative clause of the object in the first conjunct is missing its verb \textit{binnenbracht} (`brought in'); and third, the noun \textit{wijn} (`wine') was elided from the object in the relative clause. The matrix clause of the first conjunct still contains an auxiliary which we 
+promote to be the head of the first conjunct. We further promote the subject of the relative clause, i.e., the relative pronoun, to be the head of the relative clause, and we attach the adjective, which modifies the elided noun, to the promoted subject with an \texttt{orphan} relation.
+
+
+%\subsection{Particle Verbs}
+%
+%Another type of construction in which a verb with multiple dependents has been elided appears with verbal particles as in the English example in (\ref{ex:en-particle-1}).
+%While these constructions are not considered to be instances of gapping by most generative grammarians (see, e.g., \newcite{Aarts1989}), they also involve two phrases which depend on an elided verb in UD and we therefore treat them similarly to other gapping constructions. 
+% 
+%\begin{myquote}
+%\refstepcounter{excounter}
+%\label{ex:en-particle-1}
+%\footnotesize
+%\begin{dependency}[edge unit distance=2.5ex]
+% \begin{deptext}[column sep=0.1cm]
+%   (\theexcounter) \& She \& \textbf{turned} \& the \& radio \& off \& and \& the \& TV \& on \\
+%  \end{deptext}
+%  \depedge{3}{2}{nsubj}
+%  \depedge{3}{5}{obj}
+%  \depedge{3}{6}{compound:prt}
+%  \depedge[edge unit distance=2ex]{3}{9}{conj}
+%  \depedge{9}{7}{cc}
+%  \depedge{9}{10}{orphan}
+%  
+%\end{dependency}
+%\end{myquote}
+%
+%The fact that UD treats auxiliary verbs as dependents on main verbs can lead to some complexities in V2-languages such as German. In the following example, the auxiliary \textit{habe} exclusively appears in the first conjunct whereas the main verb \textit{geschaltet} only appears in the second conjunct. One way to analyze this sentence is to make the auxiliary \textit{habe} a dependent of the main verb \textit{geschaltet} and treating the subject, the object and the particle as orphans in the first conjunct. The alternative is to promote the auxiliary to be the head of the first conjunct and attach all the other phrases in the first conjunct to the auxiliary as in (\ref{ex:de-particle-1}). We argue for the second analysis because the auxiliary shows agreement with the subject in the first conjunct, and the sentence is also grammatical when the auxiliary also appears in the second conjunct as in (\ref{ex:de-particle-2}), which both suggest that the auxiliary should be part of the first conjunct.
+%
+%\begin{myquote}
+%\refstepcounter{excounter}
+%\label{ex:de-particle-1}
+%\footnotesize
+%   \begin{dependency}[edge unit distance=2.5ex]
+%  \begin{deptext}[column sep=-0.05cm]
+%    (\theexcounter) \& Ich \& \textbf{habe} \& den \& R. \& aus- \& und \& du \& den \& F. \& ein\textbf{geschaltet} \\
+%    \& I \& have \& the \& r. \& off \& and \& you \& the \& TV \&turned-on \\
+%  \end{deptext}
+%  
+%  \depedge{3}{2}{nsubj}
+%  \depedge{3}{5}{dobj}
+%  \depedge{3}{6}{compound:prt}
+%  \depedge[edge unit distance=1.5ex]{3}{11}{conj}
+%  \depedge{11}{7}{cc}
+%  \depedge{11}{8}{nsubj}
+%  \depedge{11}{10}{dobj}
+%
+%\end{dependency}
+%   {`I turned the radio off and you (turned) the TV on.'}
+% \end{myquote}
+%   
+% \begin{exe}
+% \footnotesize
+% \setcounter{xnumi}{\value{excounter}}
+%\stepcounter{excounter}
+% \ex  \label{ex:de-particle-2}
+% \gll Ich habe den Radio aus- und du hast den Fernseher ein\textbf{geschaltet}. \\
+% I have the radio off and you have the TV turned-on \\
+%\trans `I turned the radio off you (turned) the radio on.'
+% \end{exe}
+
+\section{Dependency structure}
+\label{sec:structure}
+
+In the previous section, we showed that the adopted \textit{orphan} analysis can be used to consistently annotate a large number of attested gapping constructions in different languages, which is an important consideration in deciding on an analysis. A second important question is whether our adopted analysis leads to sensible tree structures. Our analysis indicates that a conjunct with a gap forms a syntactic unit, which raises the question whether there is evidence for such a structure. 
+
+Many constituency tests such as topicalization, clefting, and stripping suggest that conjuncts with a gap often do not qualify as a constituent. For example, \newcite{Osborne2006b} argues against treating the gapping in (\ref{ex:osborne}) as the coordination of \textit{[the dog a bone]} and \textit{[the man a flower]}, which would suggest that both conjuncts are constituents. He bases his argument on the observation that the former conjunct fails most constituency tests when it is used in a sentence without coordination (\ref{ex:tests}).
+
+\begin{exe}
+\footnotesize
+ \setcounter{xnumi}{\value{excounter}}
+\stepcounter{excounter}
+\ex \label{ex:osborne} She gave the dog a bone, and the man a flower.
+\ex \label{ex:tests} \begin{xlist}
+\ex *The dog a bone, she gave. (Topicalization)
+\ex *It was the dog a bone that she gave. (Clefting)
+\ex ?She gave a dog a bone, not a cat some fish. (Stripping)
+\end{xlist}
+\end{exe}
+
+However, this argument is based on the assumption that \textit{[the dog a bone]} and \textit{[the man a flower]} form a coordinate structure. If we assume instead that the second conjunct is a clause with elided nodes, then none of the above tests seem applicable. At the same time, as already mentioned above, \newcite{Gerdes2015} point out that phrases such as \textit{``and the man a flower ''} can be uttered by a speaker in response to someone else uttering a phrase such as \textit{``she gave the dog a bone''}. They take this behavior as evidence for treating the entire conjunct with a gap (including the conjunction) as a syntactic unit. 
+
+Such an analysis is also in line with most accounts of gapping in the generative literature. While there is disagreement on what the deep structure of sentences with gapping should look like and what transformations are employed to derive the surface structure, there is broad consensus that all remnants are part of the same phrase (e.g., \newcite{Coppock2001}; \newcite{Johnson2009}). We take all of these facts as weak evidence for treating conjuncts with gaps as syntactic units.
+
+This argument based on constituency criteria might seem surprising considering that such evidence was dismissed when deciding on analyses for other constructions in UD, such as prepositional phrases. One of the major criticisms of UD has been  that we attach prepositions to their complement instead of treating them as heads of prepositional phrases because this decision appears to be misguided when one considers constituency tests (see, e.g., \newcite{Osborne2015}). However, this decision should not be interpreted as UD completely ignoring constituency. It is true that following \newcite{Tesniere1959}, UD treats content words with their function words as dissociated nuclei and thus ignores the results of constituency tests for determining the attachment of function words -- an approach that is also taken by some generative grammarians, for example, in the form of the notion of extended projection by \newcite{Grimshaw1997}. But importantly, UD still respects the constituency of nominals, clauses and other larger units. For this reason, it is important to have an analysis of gapping that respects larger constituent boundaries as it is the case with the adopted ``orphan'' analysis.
+
+%However, as explained by \newcite{Nivre2016}, treating content words as heads of phrases maximizes cross-linguistic parallelism, and therefore, in the case of prepositional phrases, it makes sense to dismiss the evidence from applying constituency tests in particular languages. But importantly, such evidence should only be dismissed when there are good reasons to do so. In the case of gapping constructions, treating conjuncts as syntactic units does not lower parallelism across languages and therefore, we see no reason why an analysis of gapping in UD should go counter the above evidence.
+
+
+
+\section{Enhanced representation}
+
+One of the drawbacks of the adopted analysis is that the \texttt{orphan} dependencies
+do not encode information on the type of argument of each remnant, which complicates 
+extracting relations between content words in downstream tasks. However, UD also defines an \textit{enhanced} 
+representation, which may be a graph instead of a tree and which may contain additional 
+nodes and relations \cite{Nivre2016,Schuster2016}. The purpose of this representation is to
+ make implicit relations between words more explicit in order to facilitate shallow natural language 
+ understanding tasks such as relation extraction. One property of the \textit{enhanced} representation 
+ is that it resolves gaps by adding nodes to \textit{basic} UD trees. Remnants attach to these additional
+ nodes with meaningful relations just as if nothing had been elided,\footnote{A similar analysis was used in the tectogrammatical layer of the Prague Dependency Treebank \cite{PDT2013}.} thus solving the issue of the uninformative \texttt{orphan} dependencies. The general idea is to insert 
+ as many nodes as required to obtain a structure  without orphans while keeping the number 
+ of additional nodes to a minimum. On top of additional nodes, we add relations between 
+ new nodes and existing content words so that there exist explicit relations between each 
+ verb and its arguments and modifiers.  We now illustrate how different cases of gapping 
+ can be analyzed in the \textit{enhanced} representation based on the following representative examples
+
+The simplest cases are constructions in which a single verb was elided. In these cases, we insert a copy node\footnote{Similar copy nodes are already used for some cases of reduced conjunctions in the \textit{collapsed} and \textit{CCprocessed} Stanford Dependencies representations \cite{DeMarneffe2008} and in the \textit{enhanced} UD representation \cite{Schuster2016}.} of the elided verb at the position of the gap, make this node the head of the conjunct, and attach all orphans to this copy node. For example, for the following sentence, we insert the copy node \textit{likes$'$} and attach \textit{Mary} as a subject and \textit{coffee} as an object.
+
+\begin{myquote}
+\refstepcounter{excounter}
+\label{ex:en-gap-7}
+\footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.2cm]
+    (\theexcounter) \& John \& likes \& tea \& and \& Mary \& \textbf{likes$'$} \& coffee \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{7}{5}{cc}
+    \depedge{7}{6}{nsubj}
+    \depedge[edge unit distance=2.0ex]{3}{7}{conj}
+    \depedge{7}{8}{obj}
+  \end{dependency}
+\end{myquote}
+Similarly, we insert a copy node as the new root of a sentence in cases in which the leftmost conjunct contains a gap as, for example, in (\ref{ex:jp-gap-1}).
+\begin{myquote}
+  \refstepcounter{excounter}
+  \label{ex:jp-gap-enhanced}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=-0.025cm]
+     (\theexcounter) \& John-ga \& hon-o \& \textbf{katta$'$}\& sosite  \& Mary-ga \& hana-o \& {katta} \\
+     \& John  \& book \& bought \& and \& Mary \& flower \& bought \\
+    \end{deptext}
+        \depedge{4}{2}{nsubj}
+    \depedge{4}{3}{obj}
+    \depedge[edge unit distance=2.5ex]{4}{8}{conj}
+    \depedge{8}{5}{cc}
+    \depedge{8}{6}{nsubj}
+    \depedge{8}{7}{obj}
+  \end{dependency}
+  \trans `John bought books, and Mary bought flowers.' \\ \null \hfill (adapted from \newcite{Kato2006})
+\end{myquote}
+In cases in which arguments or modifiers were elided along with the verb, we still only insert one copy node for the main verb. However, in order to make the relation between the verb and all of its arguments explicit, we also add relations between the new copy node and existing arguments and meaningful modifiers. In (\ref{ex:en-gap-8}), we add a copy node for the elided verb \textit{elected} and a relation between the copy node and \textit{Senator}.
+
+\begin{myquote}
+\refstepcounter{excounter}
+\label{ex:en-gap-8}
+\footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=-0.05cm]
+      (\theexcounter) \& Arizona \& elected \& X \& Senator \& and \& Florida \& \textbf{elected$'$} \& Y \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{3}{5}{xcomp}
+    \depedge{8}{6}{cc}
+    \depedge{8}{7}{nsubj}
+    \depedge[edge unit distance=2.0ex]{3}{8}{conj}
+    \depedge{8}{9}{obj}
+    \depedge[edge below, edge unit distance=1ex]{8}{5}{xcomp}
+  \end{dependency}
+\end{myquote}
+%TODO: Mention example with existential quantifier in subject position
+In cases in which a finite verb was elided along with one or more embedded verbs, as in the sentence \textit{``I want to try to begin to write a novel, and Mary a play.''}, we insert one copy node for each elided verb. However, unlike in the previous example, we do not add relations between the copy nodes and the semantically vacuous function word \textit{to} because it is not required for the interpretation of the sentence.
+
+\begin{myquote}
+\refstepcounter{excounter}
+\label{ex:en-gap-9}
+\footnotesize
+  \begin{dependency}
+    \begin{deptext}[column sep=0.1cm]
+      (\theexcounter) \& ... \& and \& M. \& \textbf{want$'$} \& \textbf{try$'$} \& \textbf{begin$'$} \& \textbf{write$'$} \& a \& play \\
+    \end{deptext}
+    \depedge{5}{3}{cc}
+    \depedge{5}{4}{nsubj}
+    \depedge{2}{5}{conj}
+    \depedge{5}{6}{xcomp}
+    \depedge{6}{7}{xcomp}
+    \depedge{7}{8}{xcomp}
+    \depedge{8}{10}{obj}
+  \end{dependency}
+\end{myquote}
+
+The motivation behind these design choices is to have direct and meaningful relations between content words. Many shallow natural language understanding systems, which make use of UD such as open relation extraction systems \cite{Mausam2012,Angeli2015} or semantic parsers \cite{Andreas2016,Reddy2017}, use dependency graph patterns to extract information from sentences. These patterns are typically designed for prototypical clause structures, and by augmenting the dependency graph as described above, many patterns that were designed for canonical clause structures also produce the correct results when applied to sentences with gapping constructions.
+
+\section{Comparison to other proposals}
+\label{sec:comparison}
+
+\subsection{Remnant analysis}
+
+The first version of the UD guidelines \cite{Nivre2016} proposed that orphans should be attached to their correspondents with the special \texttt{remnant} relation. This proposal is very similar to the analysis of string coordination by \newcite{Osborne2006}, which adds special orthogonal connections between orphans and correspondents. According to the ``remnant'' proposal, a sentence with a single verb gap is analyzed as follows.
+\begin{myquote}
+\refstepcounter{excounter}
+\label{ex:en-remnant}
+\footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.3cm]
+      (\theexcounter) \& John \& likes \& tea \& and \& Mary \& coffee \\
+    \end{deptext}
+    \depedge{3}{4}{obj}
+    \depedge{2}{6}{remnant}
+    \depedge{4}{7}{remnant}
+    \depedge{3}{2}{nsubj}
+  \end{dependency}
+\end{myquote}
+This is arguably a more expressive analysis than the ``orphan'' analysis because there is a direct link between each orphan and its correspondent, and one is able to determine the type of argument of each orphan by considering the type of argument of its correspondent. However, this analysis comes with several problems. First, it makes it impossible to analyze sentences with orphans that do not have a correspondent such as the sentence with an additional modifier in (\ref{ex:en-gap-3}), or sentences whose correspondents appear in a previous sentence as in (\ref{ex:en-gap-2}). Second, the \texttt{remnant} relations appear to be an abuse of dependency links as they are clearly not true syntactic dependency relations but rather a kind of co-indexing relation between orphans and correspondents. Further, such an analysis introduces many long-distance dependencies and many non-projective dependencies, both of which are known to lower parsing performance \cite{McDonald2007}. Lastly, as mentioned above, \textit{and Mary coffee} forms a syntactic unit, which is not captured by this proposal.
+
+\subsection{Gerdes and Kahane (2015)}
+
+\newcite{Gerdes2015} propose a graph-based analysis of gapping constructions, which inspired the analysis of gapping constructions in UD v2. Their proposal is, by and large, a combination of the ``remnant'' analysis and the ``orphan'' analysis that we described in this paper. They further add a \texttt{lat-NCC} (lateral non-constituent coordination) relation between the correspondents in the clause with the overt verb. According to their proposal, we would analyze a sentence with a single verb gap as follows.\footnote{We translated their relation names to the appropriate UD relations to make it easier to compare the various proposals.}
+\begin{myquote}
+\refstepcounter{excounter}
+\label{ex:en-gerdes}
+\footnotesize
+  \begin{dependency}[edge unit distance=2.4ex]
+    \begin{deptext}[column sep=0.3cm]
+      (\theexcounter) \& John \& likes \& tea \& and \& Mary \& coffee \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{6}{5}{cc}
+    \depedge{3}{6}{conj}
+    \depedge{6}{7}{orphan}
+    \depedge[edge below]{3}{6}{nsubj}
+    \depedge[edge below]{3}{7}{obj}
+    \depedge[edge below, edge unit distance=3.0ex]{2}{6}{remnant}
+    \depedge[edge below, edge unit distance=1.75ex]{4}{7}{remnant}
+    \depedge[edge below]{2}{4}{lat-NCC}
+  \end{dependency}
+\end{myquote}
+The advantage of this proposal is that it captures two different things: The \texttt{orphan} relation captures the fact that \textit{and Mary coffee} forms a syntactic unit and the \texttt{remnant} relations allow one to determine the type of argument of each orphan. Nevertheless, this proposal also comes with several drawbacks. First, this analysis leads to graphs that are no longer trees and it is therefore not suited for the \textit{basic} UD representation, which is supposed to be a strict surface syntax tree \cite{Nivre2016}. This would not be an issue for the \textit{enhanced} representation, which may be a graph instead of a tree, but the \texttt{remnant} relations in this analysis can lead to the same problem as mentioned above. That is, if an orphan does not have a correspondent within the same sentence, we cannot use this type of dependency. Further, the copy nodes in our \textit{enhanced} representation capture the fact that this sentence is describing two distinct ``liking'' events, which is not captured in this analysis. Finally, while their \texttt{lat-NCC} relation seems unproblematic from a theoretical point of view, we do not see its advantage in practice. For these reasons, we adopt only part of their proposal for the \textit{basic} representation and introduce copy nodes in the \textit{enhanced} representation.
+
+\subsection{Composite relations}
+ 
+Joakim Nivre and Daniel Zeman developed a third proposal\footnote{See http://universaldependencies.org/v2\_prelim/ellipsis.html for a more detailed description of their proposal.} as part of the discussion of the second version of the UD guidelines. Their proposal is based on composite relations such as \texttt{conj>nsubj}, which indicates which relations would be present along the dependency path from the first conjunct to the orphan if there was no gap. For example,  \texttt{X conj>nsubj Y} indicates that there would have been a \texttt{conj} relation between X and an elided node,  and an \texttt{nsubj} relation between the elided node and Y. According to this proposal, we would analyze a sentence with a single verb gap as follows.
+
+\begin{myquote}
+\refstepcounter{excounter}
+\label{ex:en-composite}
+\footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.3cm]
+      (\theexcounter) \& John \& likes \& tea \& and \& Mary \& coffee \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{3}{5}{conj$>$cc}
+    \depedge{3}{6}{conj$>$nsubj}
+    \depedge{3}{7}{conj$>$obj}
+  \end{dependency}
+\end{myquote}
+The advantages of this proposal are that the relation names provide much more information on the type of dependent than the generic \texttt{orphan} relation, and that in most cases, the \textit{enhanced} representation can be deterministically obtained by splitting up the relation name and inserting a copy of the governor of the composite relation. For example, for the above sentence, one could obtain the \textit{enhanced} representation by copying \textit{likes} and attaching \textit{and}, \textit{Mary}, and \textit{coffee} with a \textit{cc}, \textit{nsubj}, \textit{obj} relation, respectively.
+
+However, this representation also comes with several drawbacks. First, it drastically increases the size of the relation domain as in theory, an unbounded number of relations can be concatenated. For example, in the sentence in  (\ref{ex:non-fin-embedded}d), we would end up with a \texttt{conj>xcomp>xcomp>xcomp>obj} relation\footnote{As pointed out by a reviewer, one could limit the relation name to the first and last relation in the hypothetical dependency path, e.g., \texttt{conj>obj} in this example. While this would put an upper bound on the number of relations, it would no longer be possible to deterministically obtain the \textit{enhanced} representation in these cases. Further, we would assign the same relation label to different arguments in some cases. For example, we would add a \texttt{conj>obj} relation between \textit{want} and \textit{John} and between \textit{want} and \textit{play} in the analysis of the following sentence despite the fact that these two phrases are arguments to different verbs.
+\begin{exe}
+\footnotesize
+  \setcounter{xnumi}{\value{excounter}}
+  \stepcounter{excounter}
+  \ex Mary wants Tim to write a novel, and (wants) John (to write) a play.
+  \end{exe}
+} between \textit{want} and \textit{play}. This is highly problematic from a practical point of view as virtually all existing parsers assume that there is a finite set of relations than can appear between two words. Further, such an analysis also introduces many more long-distance dependencies. For these reasons, it seems unlikely that a parser would be able to produce this representation (and consequently also not the \textit{enhanced} representation) with high accuracy. Finally, also in this case, the second conjunct does not form a syntactic unit.
+
+\noindent\paragraph{} To summarize this comparison, the main drawback of the \textit{orphan} analysis is that it does not capture any information about the type of arguments in the basic representation. Despite this drawback, we believe that the analysis of gapping constructions in UD version 2 is better with regard to theoretical and practical considerations than any of the previous proposals, because (a) it can be used to analyze sentences in which orphans do not have correspondents; (b) it does not increase the number of relations; (c) it does not introduce additional long-distance dependencies or non-projective dependencies; and (d) it captures the fact that the second conjunct forms a syntactic unit.
+
+\section{Conclusion and future directions}
+
+We discussed which kind of gapping constructions are attested in a variety of languages, and we provided a detailed description how these constructions can be analyzed within the UD version 2 framework. We further explained how sentences with gaps can be analyzed in the \textit{enhanced} UD representation, and we argued why we believe that the current proposal gives the best tradeoff between theoretical and practical considerations.
+
+While we discussed what \textit{enhanced} UD graphs of sentences with gapping should look like, we did not provide any methods of obtaining these graphs from sentences or basic UD trees. One future direction is therefore to develop methods to automatically obtain this representation.
+
+
+\section*{Acknowledgments}
+We thank the entire UD community for 
+developing the guidelines
+and for providing feedback to various proposals as part of the 
+the discussion of the second version of the UD guidelines.
+We also thank Joakim Nivre for providing
+comments on an early draft of this paper. Further, we thank the 
+anonymous reviewers for their thoughtful feedback. We especially
+appreciated the thorough and insightful feedback by the second reviewer, and while
+we were not able to incorporate all of it due to space and time constraints, 
+we hope to address most of the remaining points in future versions of this work.
+This work was supported in part by gifts from Google, Inc. and IPSoft, Inc. 
+The first author is also supported by a Goodan Family Graduate Fellowship.
+
+
+%Do not number the acknowledgment section. Do not include this section
+%when submitting your paper for review.
+
+% If you use BibTeX with a bib file named eacl2014.bib, 
+% you should add the following two lines:
+\bibliographystyle{acl}
+\bibliography{nodalida2017}
+
+% Otherwise you can include your references as follows:
+%% \begin{thebibliography}{}
+
+%% \bibitem[\protect\citename{Aho and Ullman}1972]{Aho:72}
+%% Alfred~V. Aho and Jeffrey~D. Ullman.
+%% \newblock 1972.
+%% \newblock {\em The Theory of Parsing, Translation and Compiling}, volume~1.
+%% \newblock Prentice-{Hall}, Englewood Cliffs, NJ.
+
+%% \bibitem[\protect\citename{{American Psychological Association}}1983]{APA:83}
+%% {American Psychological Association}.
+%% \newblock 1983.
+%% \newblock {\em Publications Manual}.
+%% \newblock American Psychological Association, Washington, DC.
+
+%% \bibitem[\protect\citename{{Association for Computing Machinery}}1983]{ACM:83}
+%% {Association for Computing Machinery}.
+%% \newblock 1983.
+%% \newblock {\em Computing Reviews}, 24(11):503--512.
+
+%% \bibitem[\protect\citename{Chandra \bgroup et al.\egroup }1981]{Chandra:81}
+%% Ashok~K. Chandra, Dexter~C. Kozen, and Larry~J. Stockmeyer.
+%% \newblock 1981.
+%% \newblock Alternation.
+%% \newblock {\em Journal of the Association for Computing Machinery},
+%%   28(1):114--133.
+
+%% \bibitem[\protect\citename{Gusfield}1997]{Gusfield:97}
+%% Dan Gusfield.
+%% \newblock 1997.
+%% \newblock {\em Algorithms on Strings, Trees and Sequences}.
+%% \newblock Cambridge University Press, Cambridge, UK.
+
+%% \end{thebibliography}
+
+\end{document}

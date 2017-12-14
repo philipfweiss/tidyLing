@@ -1,0 +1,38 @@
+\section{\label{sec:Analysis}Re-tuning Analysis}
+
+Tables \ref{tab:Main-HTER-results} and \ref{tab:pe-vs-int} raise
+two natural questions: what accounts for the reduction in HTER, and
+why are the TER/BLEU results mixed? Comparison of the BLEU-tuned baseline
+to the HTER re-tuned systems gives some insight. For both questions,
+fine-grained corrections appear to make the difference.
+
+Consider this French test example (with gloss):
+
+\vspace{-0.25em}
+\exg. une ligne de chimioth\'{e}rapie ant\'{e}rieure\\
+      one line of chemotherapy previous\\%imt-test:3
+\vspace{-0.25em}
+
+\noindent The independent reference for \textit{une ligne de chimioth\'{e}rapie} is `previous chemotherapy treatment', and the baseline produces `previous chemotherapy line.' The source sentence appears seven times with the following user translations: `one line or more of chemotherapy', `one prior line of chemotherapy',
+`one previous line of chemotherapy' (2), `one line of chemotherapy before' (2), `one protocol of chemotherapy'. The re-tuned, feature-based system produces `one line of chemotherapy before', matching two of the humans exactly, and six of the humans in terms of idiomatic medical jargon (`line of chemotherapy' vs. `chemotherapy treatment'). However, the baseline output would have received better BLEU and TER scores.
+
+%Sometimes translations in the reference contain additional clauses
+%which are not part of the source sentence. For example, consider the
+%following sentence pair from the tuning set:
+
+%\ex.the recommended daily dose of tarceva is 150 mg\\
+%   die empfohlene tagesdosis von tarceva 150 mg, \emph{bei pankreaskarzinom 100 mg}\\
+
+%The source does not contain the phrase in italics, so none of the
+%human translators included it in their corrections. The re-tuned system
+%produces a shorter translation that is penalized by BLEU.
+
+Sometimes re-tuning improves the translations with respect to both
+the reference and the human corrections. This English phrase appears in the En-De test set:
+
+\vspace{-0.25em}
+\exg.depending on the file\label{ex:ende-file}\\
+   abh\"{a}ngig von der datei \\%imt-test
+\vspace{-0.25em}
+
+\noindent The baseline produces exactly the gloss shown in Ex. \ref{ex:ende-file}. The human translators produced: `je nach datei' (6), `das dokument', and `abh\"{a}ngig von der datei'. The re-tuned system rendered the phrase `je nach dokument', which is closer to both the independent reference `je nach datei' and the human corrections. This change improves TER, BLEU, and HTER.

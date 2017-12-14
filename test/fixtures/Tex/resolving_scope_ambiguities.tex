@@ -1,0 +1,978 @@
+\documentclass[parskip=half]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{scrpage2}
+\usepackage{ifthen}
+\usepackage[ruled,lined]{algorithm2e}
+\usepackage[fleqn]{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{units}
+\usepackage{enumerate}
+\usepackage{multirow}
+\usepackage{ dsfont }
+\usepackage{MnSymbol}
+\usepackage{wasysym}
+\usepackage{stmaryrd}
+\usepackage{qtree}
+\usepackage{ tipa }
+\usepackage{gb4e}
+\usepackage[comma,authoryear,numbers]{ natbib }
+\usepackage{lscape}
+\usepackage{afterpage}
+
+
+\setlength{\textwidth}{6in} 
+
+\newcommand{\sem}[1]{\ensuremath{\llbracket#1\rrbracket}}
+
+\linespread{1.0}
+
+
+\begin{document}
+
+\thispagestyle{scrheadings}
+~
+
+\vspace{-2ex}
+
+\begin{center}
+\LARGE{ \textsf{\textbf{Resolving Scope Ambiguities of Determiner Phrases in Intensional Contexts with a CCG}}} \\ \vspace{1ex}
+%\large{ \textsf{}} \\
+\vspace{1ex}
+\normalsize{Sebastian Schuster}
+\end{center}
+
+\vspace{1ex}
+\begin{abstract}
+\textbf{Abstract.} Janet Fodor argued in her dissertation that sentences with a quantificational determiner in an intensional context can
+have up to four distinct readings. Previous accounts to derive these meanings heavily depended on quantifier movement and 
+phonologically silent words. I extend a CCG fragment by Pauline Jacobson to derive  all four meanings of sentences with an existential
+quantifier in an intensional context in a directly compositional manner. I also argue why Jacobson's approach has difficulties in deriving specific and
+opaque meanings for sentences with more complex quantificational determiners such as `most'.
+\end{abstract}
+
+\vspace{1ex}
+
+\section{Introduction}
+
+Janet \cite{fodor1970} argued in her dissertation that a sentence such as \textit{Mary wants to buy a hat just like mine} has in total four distinct readings. 
+\begin{exe}
+\ex \label{ex:mary-orig} \begin{xlist} 
+\ex non-specific, opaque (\textit{de dicto}): \\ $\lambda w_s. \mathbf{wants}(w)(\lambda w_s' \exists x_e. \mathbf{h-jlm}(w')(x) \land \mathbf{buys}(w')(x)(\mathbf{m}))$
+
+Mary is a copycat and she expressed that she wants to buy a hat similar to the one I have. She might not even be aware
+of how my hat looks but she intends to buy one as soon as she finds out which kind of hat I own.
+\ex specific, transparent (\textit{de re}): \\ $\lambda w_s \exists x_e. \mathbf{h-jlm}(w)(x) \land \mathbf{wants}(w)(\lambda w_s'. \mathbf{buys}(w')(x)(\mathbf{m}))$
+
+There is a specific hat just like mine that Mary saw and wants to buy. She might not be aware that this hat is similar to the one I own.
+\ex non-specific, transparent: \\ $\lambda w_s. \mathbf{wants}(w)(\lambda w_s' \exists x_e. \mathbf{h-jlm}(w)(x) \land \mathbf{buys}(w')(x)(\mathbf{m}))$
+
+Mary wants to buy a specific type of hat, but any hat of that type will do. She is not aware that I own a hat of this type.
+\ex specific, opaque: \\
+$\lambda w_s  \exists x_e. \mathbf{wants}(w)(\lambda w_s'. \mathbf{h-jlm}(w')(x) \land \mathbf{buys}(w')(x)(\mathbf{m}))$
+
+There exists something that Mary thinks is a hat just like mine and Mary wants to buy it. 
+\end{xlist}
+\end{exe}
+
+%\subsection{The \textit{de dicto} and \textit{de re} readings}
+
+The two most prominent readings are the \textit{de dicto} and the \textit{de re} readings which have been extensively discussed in the literature.
+\citet[Ch. 7]{Fintel2002} use the fact that the \textit{de dicto} and the \textit{de re} readings differ both in the scope of the determiner phrase and in the world 
+which is applied to the DP. In the case of (\ref{ex:mary-orig}a) we can get the derivation without any raising operations as the DP takes the
+right scope and the right world argument by default. To get the \textit{de re} reading of this sentence we have to raise the DP \textit{[a hat just like mine]} so that it takes wide scope. 
+\cite{Fintel2002} do this by raising the DP above the intensional verb leaving a trace of type $e$.
+
+
+
+%\Tree [ .{$t$}
+%           [ .{$<<e,t>,t>$} {a hat just like mine} ]
+%           [ .{$<e,t>$}
+%             {$\lambda_5$}
+%             [ .{$t$}
+%               [ .{$e$} Mary ]
+%               [ .{$<e,t>$}
+%                  {$\lambda_1$}
+%                  [ .{$t$}
+%                    [ .{$e$} {$t_1$} ]
+%               [ .{$<e,t>$}
+%                 [ .{$<<s,t>,<e,t>>$} wants ]
+%                 [ .{$t$}
+%                   [ .{$e$} {$t_1$} ]
+%                   [ .{$<e,t>$}
+%                    [ .{$<e,<e,t>>$}
+%                     {to buy}
+%                     ]
+%                     [ .{$e$} {$t_5$} ]
+%                   ]
+%                 ]
+%               ]
+%             ]
+%           ]
+%          ]
+%          ]
+%          ]
+
+%However, it is not always the case that the original syntax predicts the \textit{de dicto} reading. Consider the sentence in (\ref{ex:somebody-mhbh}) \citep{Fintel2002}.
+%
+%\begin{exe}
+%\ex \label{ex:somebody-mhbh} Somebody must have been here last night.
+%\end{exe}
+%
+%Without moving the DP, we get the \textit{de re} reading in this case, which says there is a specific person who must have been here last night. To get the \textit{de dicto}
+%reading which says that in all of my believe-worlds there is a person who was here last night, we need to move the DP \textit{somebody} below the modal verb.  \cite{Fintel2002}
+%discuss several ways of obtaining the \textit{de dicto} reading including the use of the Copy Theory of Movement \citep{chomsky1995}, lowering the DP into the embedded clause, 
+%raising the modal above the DP and using a trace of type $<e,<e,t>>$. Throughout the rest of this paper, I will only consider sentences with a DP in the embedded clause and therefore I will
+%not discuss these approaches in more detail.
+
+%\subsection{The third and fourth readings}
+
+However, neither the non-specific, transparent reading nor the specific, opaque reading can be derived by raising the entire determiner phrase. Moving the DP changes its scope
+and  at the same time the world in which it is interpreted. To derive the third and fourth reading we need a mechanism that allows us to change either the scope or the  world  
+variable that is applied to the restrictor.  To address this problem \cite{Fintel2002} present the concept of overt world variables.  The main idea is to explicitly add silent word-referring pronouns to all predicates.
+%\footnote{Nevertheless they tend to stay extensional wherever possible and omit world variables for predicates that do not depend on the applied world variable such as quantificational determiners or proper nouns.}.
+ 
+In combination with raising the DP this mechanism makes it possible to derive the non-specific, transparent reading as following.
+
+\footnotesize
+
+\Tree [ .$<s,t>$
+            $\lambda w_0$
+             [ .$t$
+               [ .$e$ Mary ]
+               [ .$<e,t>$
+                $\lambda_1$
+                [ .$t$
+                  [ .$e$  $t_1$ ]
+                  [ .$<e,t>$
+                 [ .$<<s,t>,et>$
+                   [ .$<s,<s,t>,et>>$ wants ]
+                   [ .$s$ $w_0$ ]
+                  ]
+                  [ .{$<s,t>$}
+                   $\lambda w_1$
+                   [ .${t}$
+                   [ .{$e$} $t_1$ ]
+		  [ .{$<e,t>$} [ .{$<e,et>$} 
+		  [ .{$<s,<e,et>>$} {to buy} ]
+		  [ .{$s$} $w_1$ ]
+		  ]
+		  [ 		   .${<<e,et>,et>}$
+		  \qroof{a hat just like mine}.{$<s,<<e,et>,et>>$} 
+		    [ .$s$ ${w_0}$ ] 
+		  ]
+                 ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxx}
+                 ] ] ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+               ] !\faketreewidth{xxxxxxxxxxxx}
+             ]
+         ] 
+         ]
+
+\normalsize
+
+I use a lifted version of the quantificational determiner \textit{a} in this derivation so that the determiner can be combined with the intransitive verb.
+
+With this extension we are able to derive three of the four readings. But also this approach does not allow us
+to get the fourth reading. \cite{Fintel2002} completely ignore its existence and consequently do not present any account on how to derive it. 
+
+\cite{szabo2010}, on the other hand, argues that the fourth reading
+does exist in many cases and extends the fragment by \cite{heim1998} to derive the specific and opaque reading. He proposes to allow the splitting of 
+quantificational determiners from their restrictor by introducing a phonologically silent word \textit{thing} with the semantic value $\lambda x_e. x=x$. 
+Further, he adds an application rule to the fragment and changes the lexical entry of
+some of the quantificational determiners. The main idea behind Szabó's approach to derive the specific and opaque reading is to use \textit{thing}
+ as the restrictor of the determiner which will always evaluate to true and then allow the nuclear scope to evaluate to either \textit{true}, \textit{false} or \textit{undefined}.
+ He relies on the fact that quantificational determiners in English are all conservative \citep{keenan1996}, so whenever the restrictor evaluates to 
+  \textit{false} we do not care what the nuclear scope evaluates to. If we change the nuclear scope to be a conjunction of the original restrictor and the original nuclear scope that
+ evaluates to  \textit{undefined} whenever the original restrictor evaluates to  \textit{false} then it is possible to redefine all quantificational determiners such that they 
+ only consider what the new nuclear scope evaluates to. Then the fourth reading can be derived by moving the quantificational determiner
+ together with the silent \textit{thing} as its restrictor out of the embedded clause and leaving a trace while keeping the original restrictor and nuclear scope in place
+ which I illustrate in the following tree.
+
+%\begin{landscape}
+\footnotesize
+\hspace{1cm}
+\Tree [ .$<s,t>$
+            $\lambda w_0$
+            [ .${t}$
+             [ .{$<<e,t>,t>$}  [ .{$<<e,t>,<<e,t>,t>>$} {a} ] [ .{$<e,t>$} {\textit{thing}} ] ]
+            [ .{$<e,t>$} 
+             $\lambda_5$
+             [ .$t$
+               [ .$e$ Mary ]
+               [ .$<e,t>$
+                $\lambda_1$
+                [ .$t$
+                  [ .$e$  $t_1$ ]
+                  [ .$<e,t>$
+                 [ .$<<s,t>,<e,t>>$
+                   [ .$<s,<s,t>,<e,t>>>$ wants ]
+                   [ .$s$ $w_0$ ]
+                  ]
+                  [ .{$<s,t>$}
+                   $\lambda w_1$
+                   [ .${t}$
+                   [ .{$e$} $t_1$ ]
+		  [ .{$<e,t>$} [ .{$<e,<e,t>>$} 
+		  [ .{$<s,<e,<e,t>>>$} {to buy} ]
+		  [ .{$s$} $w_1$ ]
+		  ]
+		  [ .{$e$} 
+		     [ . t_5 ]
+		     [ .$<e,t>$ 
+		       [ .$<s,<e,t>>$ {hat just like mine} ]
+		       [ .$s$ ${w_0}$ ] 
+		     ] !\faketreewidth{xxxxxxxxxxxx}
+		  ] !\faketreewidth{xxxxxxxxxx}
+                 ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxx}
+                 ] ] ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxx}
+               ] !\faketreewidth{xxxxxxxxxxxx}
+             ] !\faketreewidth{xxxxxxxxxx}
+         ] 
+         ]
+         ] !\faketreewidth{xxxxxxxxxxxx}
+         ]
+%\end{landscape}
+
+\normalsize
+
+\section{Resolving Ambiguities in a CCG}
+
+The accounts that I presented so far all require the movement of determiner phrases and the use of traces and are therefore not directly compositional. This leads to various undesired side-effects such as that the tree which is used to compute the meaning of the sentence no longer reflects the surface form of the sentence or that, for example, in the derivation of the specific and opaque reading the arguably well-formed constituent \textit{[a hat just like mine]} does not have a meaning. Therefore it is desirable to have a directly compositional account which does not show these side-effects to resolve the ambiguities posed by DPs in intensional contexts.  In the following sections I present such an approach by extending the combinatorial categorial grammar (CCG) fragment of \cite{jacobson2014}.
+
+\subsection{Intensional sentences}
+
+For most of her discussion \cite{jacobson2014} uses an extensional version of her fragment. As we are dealing with a sentence with an intensional verb 
+my entire account crucially depends on an intensional framework. For this reason, I briefly illustrate the account to derive intensional
+meanings as presented in  \citet[Ch.\ 20]{jacobson2014} based on the following intensional sentence.
+
+\begin{exe}
+\ex \label{ex:h-thinks-b-laughed} Sue thinks that Pat laughed.
+\end{exe}
+
+Let me first define the entries in the lexicon for each lexical item. Note that the
+each lexical item has an intensional meaning.
+\begin{itemize}
+\item $\langle$ [Sue], $NP$, $\lambda w_s. \mathbf{s} \rangle$
+\item $\langle$ [thinks], $(S/_LNP)/_R CP$, $\lambda w_s \lambda P_{<s,t>} \lambda x_e. \mathbf{thinks}(w)(P)(x)  \rangle$ \\
+where  $\mathbf{thinks}(w)(P)(x)$ has the meaning \\ $\forall w_s'. [w' \mbox{ is in the set of belief-worlds of $x$ in $w$ and $P(w')$}]$
+\item $\langle$ [that], $CP/_R S$, $\lambda w_s \lambda P_{<s,t>}. P(w) \rangle$
+\item $\langle$ [Pat], $NP$, $\lambda w_s. \mathbf{p} \rangle$
+\item $\langle$ [laughed], $S/_L NP$, $\lambda w_s \lambda x_e. \mathbf{laughed}(w)(x) \rangle$
+\end{itemize}
+
+
+Most of these lexical items can be combined with 
+a modified version of the  application rule that allows the
+combination of intensional meanings.
+
+\begin{enumerate}[INT-R-1.]
+\item[{INT-R-1.}] If $\alpha$ is  an expression of the form $\langle [\alpha], A/B, \sem{\alpha} \rangle$
+and $\beta$ is an expression of the form $\langle [\beta], B, \sem{\beta} \rangle$ then there is an
+expression $\gamma$ of the form ~\\ 
+$\langle F_{CAT(\alpha)}([\alpha])([\beta]), A, \lambda w_s.[\sem{\alpha}(w)(\sem{\beta}(w))]\rangle$ \citep[Ch. 20]{jacobson2014}.
+\end{enumerate}
+
+We can derive the meaning of phrases such as \textit{[Sue laughed]} using this rule. 
+However, when we try to combine \textit{[thinks]} with a $CP$ we run into
+the problem that this rule applies a world argument to the proposition $P$ and therefore the second
+argument will be of type $t$ and not as expected of type $<s,t>$. Therefore, \cite{jacobson2014}
+proposes to add the following type-sensitive semantic operation \textbf{app}:
+
+\begin{enumerate}[\textbf{app.}]
+\item[\textbf{app:}] 
+\begin{enumerate}[i.]
+\item If \sem{\alpha} is of type $<s, <a,b>>$ (for $a \ne <s,x>$ for some $x$), and \sem{\beta} is of type $<s,a>$, then 
+$\mathbf{app}(\sem{\alpha}(\sem{\beta})) = \lambda w_s.[\sem{\alpha}(w)(\sem{\beta}(w))]$
+\item If \sem{\alpha} is of type $<s, <<s,a>,b>>$  and \sem{\beta} is of type $<s,a>$, then 
+$\mathbf{app}(\sem{\alpha}(\sem{\beta})) = \lambda w_s.[\sem{\alpha}(w)(\sem{\beta})]$
+\item If \sem{\alpha} is of type $<a,b>$  (for $a \ne s$), and \sem{\beta} is of type $<s,a>$, then 
+$\mathbf{app}(\sem{\alpha}(\sem{\beta})) = \lambda w_s.[\sem{\alpha}(\sem{\beta(w)})]$
+\end{enumerate}
+\end{enumerate}
+
+With this operation we can obtain the final version of the intensional application
+rule~INT-R-1':
+
+\begin{enumerate}[INT-R-1'.]
+\item[{INT-R-1'.}] If $\alpha$ is  an expression of the form $\langle [\alpha], A/B, \sem{\alpha} \rangle$
+and $\beta$ is an expression of the form $\langle [\beta], B, \sem{\beta} \rangle$ then there is an
+expression $\gamma$ of the form ~\\ 
+$\langle F_{CAT(\alpha)}([\alpha])([\beta]), A, \mathbf{app}(\sem{\alpha}(\sem{\beta}))\rangle$.
+\end{enumerate}
+
+Now we have everything in place to derive the meaning of (\ref{ex:h-thinks-b-laughed}):
+
+\vspace{1cm}
+
+\footnotesize
+\Tree [ .{ Sue thinks that Pat laughed \\ S \\ $\lambda w_s  \mathbf{thinks}(w)(\lambda w_s'  \mathbf{laughed}(w')(\mathbf{p}))(\mathbf{s})$ \\ $ = \lambda w_s  \forall w_s'. [w' \mbox{ is in the set of belief-worlds of \textbf{s} in $w$}$ \\ $\mbox{ and $\mathbf{laughed}(w')(\mathbf{p})$}] $}
+            {Sue \\ NP \\ $\lambda w_s. \textbf{s}$}
+            [
+              .{thinks that Pat laughed \\S/_LNP \\ $\lambda w_s  \lambda x_e. \mathbf{thinks}(w)(\lambda w_s'.  \mathbf{laughed}(w')(\mathbf{p}))(x)$ }
+               {thinks\\(S/_LNP)/_RCP \\ $\lambda w_s \lambda P_{<s,t>} \lambda x_e. \mathbf{thinks}(w)(P)(x) $}
+               [
+                 .{that Pat laughed \\CP \\ $\lambda w_s.  \mathbf{laughed}(w)(\mathbf{p})$}
+                  {that \\CP/_RS \\ $\lambda w_s \lambda P_{t}. P$}
+                  [
+                    .{Pat laughed \\ S \\ $\lambda w_s.  \mathbf{laughed}(w)(\mathbf{p})$}
+                     {Pat\\NP\\ $\lambda w_s. \textbf{p}$}
+                     {laughed\\S/_LNP \\ $\lambda w_s \lambda x_e. \mathbf{laughed}(w)(x)$}
+                  ]
+               ]
+            ]
+         ]
+
+\vspace{1cm}
+
+\normalsize
+
+This fragment allows us to derive the meaning of simple intensional sentences, so we can now go back to the 
+original problem of resolving scope ambiguities in intensional contexts.
+
+\subsection{The \textit{de dicto} reading}
+
+I begin the discussion with the derivation of the reading that is directly supported by the syntax, namely the \textit{de dicto} reading of (\ref{ex:mary-de-dicto-orig}).
+
+\begin{exe}
+\ex \label{ex:mary-de-dicto-orig}Mary wants to buy a hat just like mine.
+\end{exe}
+
+The derivation of the \textit{de dicto} reading is very straightforward with the exception of two small complications. First, there is a generalized quantifier in object position. 
+I resolve this issue by using one of the argument raising rules by \cite{barker2005}. These two rules are an adaptation of a mechanism to resolve quantifier scope ambiguities from the Flexible Types framework by \cite{hendriks1993} which raise a transitive verb such that it takes a determiner phrase as one of its arguments. By applying both rules and varying the application order it is possible to derive either a wide scope or narrow scope reading for sentences with a quantificational determiner in subject and object position. As (\ref{ex:mary-de-dicto-orig}) contains only one quantificational determiner we only need to apply the first rule which raises the verb such that it takes a DP as its first argument. 
+
+
+The second challenge is that the sentence contains an infinitive clause. In order to resolve this issue I propose the following lexical entry for \textit{to}.
+
+\begin{itemize}
+\item $\langle$ [to], S[INF]/$_R$(S/$_L$NP), $\lambda w_s \lambda P_{<e,t>}. P \rangle$
+\end{itemize}
+
+This lexical entry allows us to combine \textit{to} with a verb phrase resulting in a sentence with the feature INF and if we define control verbs such that they are looking for a phrase of category S[INF] we can combine them with infinitive clauses to form a verb phrase.
+
+%allows us to treat the infinitive clause similar to a regular subordinate clause with a pronoun in subject position. The only other required addition to the fragment is 
+%an intensional version of the \textbf{z}-rule. \cite{jacobson2014} uses this rule only in an extensional context, so it cannot directly be used to derive the meaning of (\ref{ex:mary-orig}). 
+%Similar to the type-sensitive application function $\textbf{app}$, I propose the following type-sensitive, intensional rule function $\mathbf{z'}$.
+
+%\begin{enumerate}[\textbf{z-int.}]
+%\item[$\mathbf{z':}$] 
+%\begin{enumerate}[i.]
+%\item If \sem{\alpha} is of type $<s, <a,<e,b>>>$ (for $a \ne <s,x>$ for some $x$), then \\ $\mathbf{z'}(\sem{\alpha}) = \lambda w_s \lambda Y_{<e,a>}.[\lambda x_e. \sem{\alpha}(w)(Y(x))(x)]$.
+%\item If \sem{\alpha} is of type $<s, <<s,a>,<e,b>>>$, then \\ $\mathbf{z'}(\sem{\alpha}) = \lambda w_s \lambda Y_{<s,<e,a>>}.[\lambda x_e. \sem{\alpha}(w)(\lambda w_s'. Y(w')(x))(x)]$.
+%\end{enumerate}
+%\end{enumerate}
+
+%Using this function we can define the type-sensitive, intensional version of the \textbf{z}-rule, \textbf{z-int}.
+
+%\begin{enumerate}[\textbf{z-int.}]
+%\item[\textbf{z-int:}]  Let $\alpha$  be an expression of the form $\langle [\alpha], (A/NP)/B, \sem{\alpha} \rangle$. Then there is an
+%expression of the form $\langle[\alpha], (A/NP)/B^{NP}, \mathbf{z'}(\sem{\alpha}) \rangle$.  
+ %\end{enumerate}
+
+With these extensions we can derive the \textit{de dicto} reading of (\ref{ex:mary-orig}).
+
+
+\footnotesize
+\hspace{0.5cm}
+\Tree  [
+                   .{to buy a hat just like mine \\ S[INF] \\ $\lambda w_s \lambda y_e \exists x. [\mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w)(x)(y)]$}
+                      {to \\ S[INF]/_R(S/_LNP) \\ $\lambda w_s \lambda P_{<e,t>}. P$}
+                   [
+                     .{buy a hat just like mine \\ S/_L NP \\  $\lambda w_s \lambda y_e \exists x_e. [\mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w)(x)(y)]$}
+                        [ .{buy \\  (S/_L NP)/_R (S/_R(S/_L NP)) \\ $\lambda w_s \lambda R_{<<e,t>,t>} \lambda y_e . R(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+                          [ .{\textbf{ar1}}
+                              {buy \\ (S/_L NP)/_R NP  \\ $\lambda w_s \lambda x_e \lambda y_e . \mathbf{buy}(w)(x)(y)$}
+                          ]
+                        ]
+                      [ .{a hat just like mine \\ S/_R (S/_L NP) \\ $  \lambda w_s \lambda Q_{<e,t>} \exists x_e. [\mathbf{hat-jlm}(w)(x) \land Q(x)]$}
+                        {a \\ (S/_R (S/_L NP))/_R N  \\ $ \lambda w_s \lambda P_{<e,t>} \lambda Q_{<e,t>} \exists x_e. [P(x) \land Q(x)]$}
+                        {hat just like mine \\ N \\ $\lambda w_s \lambda x_e. \mathbf{hat-jlm}(w)(x)$}
+                      ]
+                   ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+                 ]
+
+\vspace{1cm}
+\Tree [  .{Mary wants to buy a hat just like mine \\ S \\ $\lambda w_s.  \mathbf{wants}(w)(\lambda w_s' \exists x. [\mathbf{hat-jlm}(w')(x) \land \mathbf{buy}(w')(x)(\mathbf{m})])(\mathbf{m})$}
+             {Mary \\ NP \\ $\lambda w_s. \mathbf{m}$}
+             [
+               .{wants to buy a hat just like mine \\ S/_L NP\\ $\lambda w_s \lambda y_e. \mathbf{wants}(w)(\lambda w_s' \exists x. [\mathbf{hat-jlm}(w')(x) \land \mathbf{buy}(w')(x)(y)])(y)$}
+               [
+                  .{wants \\  (S/_L NP)/_R S[INF] \\ $\lambda w_s \lambda P_{<s,t>} \lambda y_e. \mathbf{wants}(w)(\lambda w'. P(w')(y))(y)$} 
+               ]
+                 {to buy a hat just like mine \\ S[INF] \\ $\lambda w_s \lambda y_e \exists x_e. [\mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w)(x)(y)]$}
+             ]
+         ]
+
+
+\normalsize
+
+\subsection{The \textit{de re} reading}
+
+The derivation of the \textit{de re} meaning requires some additional considerations. Note that the \textit{de re} reading
+has the logical form
+
+\begin{exe}
+\ex $\lambda w_s  \exists x. [\mathbf{hat-jlm}(w)(x) \land \mathbf{wants}(w)(\lambda w_s'. \mathbf{buy}(w')(x)(\mathbf{m}))(\mathbf{m})]$
+\end{exe} 
+
+To derive this meaning \textit{[wants to buy]} has to be the nuclear scope of the generalized quantifier \textit{a}. This implies that we have to derive a 
+meaning for \textit{[wants to buy]}, so we have to repeatedly combine phrases that are missing an NP argument. 
+One way to achieve this is by applying the Geach rule \textbf{g-sl} to each lexical item 
+as described by \cite{jacobson2014}. However, \textbf{g-sl} is only defined in an extensional context. Therefore, I propose the following type-sensitive, intensional version of \textbf{g-sl}.
+
+\begin{enumerate}[\textbf{g-sl-int.}]
+\item[\textbf{g-sl-int:}] 
+\begin{enumerate}[i.]
+\item If \sem{\alpha} is of type $<s, <a,b>>$ (for $a \ne <s,x>$ for some $x$), then \\ $\mathbf{g}_c(\sem{\alpha}) = \lambda w_s \lambda C_{<c,a>}.[\lambda x_c. \sem{\alpha}(w)(C(x))]$
+\item If \sem{\alpha} is of type $<s, <<s,a>,b>>$, then \\ $\mathbf{g}_c(\sem{\alpha}) = \lambda w_s \lambda C_{<s, <c,a>>}.[\lambda x_c. \sem{\alpha}(w)(\lambda w'_s .C(w')(x)]$
+\end{enumerate}
+\end{enumerate}
+
+\pagebreak
+This allows us to derive a meaning for \textit{[wants to buy]}.
+
+\footnotesize
+\hspace{-1cm}
+\Tree  [  .{wants to buy \\ (S/_L NP)/_RNP \\  $\lambda w_s \lambda x_e \lambda y_e. \textbf{wants}(w)(\lambda w_s'. \mathbf{buy}(w')(x)(y))(y)$}
+              [ .{wants \\ ((S/_LNP)/_RNP)/_R(S[INF]/_RNP) \\ $\lambda w_s \lambda P_{<s,<e,<e,t>>>} \lambda x_e \lambda y_e. \textbf{wants}(w)(\lambda w_s'. P(w')(x)(y))(y)$ }
+                [ .\textbf{g-sl-int}
+                  [ 
+                     .{wants \\ (S/_LNP)/_RS[INF] \\ $\lambda w_s \lambda P_{<s,<e,t>>} \lambda y_e. \textbf{wants}(w)(\lambda w_s'. P(w')(y))(y)$ }
+                  ]
+                ] 
+              ]
+              [ .{to buy \\ S[INF]/_RNP \\ $\lambda w_s \lambda x_e \lambda y_e. \mathbf{buy}(w)(x)(y) $}
+                 [  .{to \\ (S[INF]/_RNP)/_R((S/_L NP)/_RNP)\\ $\lambda w_s \lambda P_{<e, <e,t>>} \lambda x_e. P(x)$  }
+                    [ .\textbf{g-sl-int}
+                      {to \\ S[INF]/_R (S/_LNP) \\ $\lambda w_s \lambda P_{<e,t>}. P$ }
+                    ]
+                 ]
+                    {buy \\ (S/_LNP)/_RNP \\  $\lambda w_s \lambda x_e \lambda y_e . \mathbf{buy}(w)(x)(y)$}
+              ]!\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+           ]
+
+\normalsize
+
+Note that this phrase has the same syntactic category as a transitive verb. Therefore we can apply the argument-raising rule \textbf{ar1} to \textit{[wants to buy]} and subsequently combine the
+result with the determiner phrase to derive  the \textit{de re} reading of (\ref{ex:mary-orig}).
+
+\footnotesize
+\Tree [ .{Mary wants to buy a hat just like mine \\ S \\ $\lambda w_s  \exists x_e. [\mathbf{hat-jlm}(w)(x) \land \mathbf{wants}(w)(\lambda w_s'. \mathbf{buy}(w')(x)(\mathbf{m}))(\mathbf{m})]$}
+            {Mary \\ NP \\ $\lambda w_s. \mathbf{m}$}
+            [ .{wants to buy a hat just like mine \\ S/_L NP \\ $\lambda w_s  \lambda y_e \exists x_e. [\mathbf{hat-jlm}(w)(x) \land \mathbf{wants}(w)(\lambda w_s'. \mathbf{buy}(w')(x)(y))(y)]$}
+              [ .{wants  to buy \\ (S/_L NP)/_R (S/_R(S/_L NP)) \\ $\lambda w_s \lambda R_{<<e,t>,t>} \lambda y_e . R(\lambda x_e. \textbf{wants}(w)(\lambda w_s'. \mathbf{buy}(w')(x)(y))(y))$}
+              [  .\textbf{ar1}
+                 { wants to buy \\ (S/_LNP)/_RNP \\  $\lambda w_s \lambda x_e \lambda y_e. \textbf{wants}(w)(\lambda w_s'. \mathbf{buy}(w')(x)(y))(y)$}
+              ]
+              ]
+              {a hat just like mine \\ S/_R(S_L/NP) \\ $  \lambda w_s \lambda Q_{<e,t>} \exists x_e. [\mathbf{hat-jlm}(w)(x) \land Q(x)]$ }
+            ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+         ]
+
+\normalsize
+
+While this approach works well for the \textit{de re} reading of (\ref{ex:mary-orig}), we cannot derive the \textit{de re} reading
+of sentences such as (\ref{ex:fom-wins}).
+
+\begin{exe}
+\ex \label{ex:fom-wins} Mary thinks that a friend of mine won.
+\end{exe}
+
+In (\ref{ex:fom-wins}) we have a quantificational phrase that acts as the subject of the embedded clause, so
+we cannot simply raise the DP as we did in the case of (\ref{ex:mary-orig}). Therefore we need some other rules
+that are more flexible in raising the restrictor of a quantificational determiner. I will ignore this problem for now, though,  and return to it 
+after I present an account to get the remaining two readings. 
+
+
+%\cite{barker2005} adapted several rules by \cite{hendriks1993} to the Jacobson-CCG
+%that can raise arguments and values of functions. However, we would need a rule that can raise only the first
+%argument of a quantifier while leaving the second argument in place and all the presented rules always modify the entire function. Also, all these rules
+%are only defined for extensional predicates and it seems to be quite challenging to change these rules so that they can also handle verbs that require
+%an intensional sentence as an argument. Nevertheless, I believe that a complex adaptation of the rules by \cite{hendriks1993}, should make it possible 
+%to derive the \textit{de re} reading in all cases.
+
+
+
+
+%\footnotesize
+%\hspace{-3cm}
+%\Tree [ .{Mary wants that a friend of mine wins \\ S \\ $\lambda w_s \exists x_e. \mathbf{fom}(w)(x) \land  \mathbf{wants}(w)(\lambda w_s'. \mathbf{win}(w')(x))(\mathbf{m})$}
+%            {Mary \\ NP \\ $\lambda w_s. \mathbf{m} $}
+%            [ .{wants that a friend of mine wins \\ S/_LNP \\ $\lambda w_s \lambda y_e   \exists x_e. \mathbf{fom}(w)(x) \land  \mathbf{wants}(w)(\lambda w_s'. \mathbf{win}(w')(x))(y)$ }
+%               {wants\\(S/_LNP)/_RCP \\ $\lambda w_s \lambda T_{<s,t>} \lambda y_e. \mathbf{wants}(w)(T)(y)$}
+%               [  .{that a friend of mine wins\\(S/_LNP)/_L((S/_LNP)/_RCP) \\ $\lambda w_s  \lambda S_{<<s,t>,<e,t>>} \exists x_e. \mathbf{fom}(w)(x) \land S(w)(\lambda w_s'. \mathbf{win}(w')(x))$}
+%                   [ .{that \\ ((S/_LNP)/_L((S/_LNP)/_RCP))/_RS \\ $\lambda w \lambda P_{<s,t>} \lambda S_{<<s,t>,<e,t>>}. Q(w)(P)$}
+%                      [ .{\textbf{vr}}
+%                        {that\\CP/_RS\\$\lambda w \lambda P_t. P$}
+%                      ]
+%                   ]
+%                   [ .{a friend of mine wins\\((S/_LNP)/_L((S/_LNP)/_RCP)/_L(((S/_LNP)/_L((S/_LNP)/_RCP))/_RS)) \\ $\lambda w_s \lambda Q_{<<s,t>, <<s,t>,<e,t>>>} \exists x_e. \mathbf{fom}(w)(x) \land Q(\lambda w_s'. \mathbf{win}(w')(x))$}
+%                      [ .{a friend of mine \\ ((S/_LNP)/_L((S/_LNP)/_RCP)/_L(((S/_LNP)/_L((S/_LNP)/_RCP))/_RS))/_R(S_L/NP) \\ $\lambda w_s \lambda R_{<e,t>} \lambda Q_{<<s,t>, <<s,t>,<e,t>>>} \exists x_e. \mathbf{fom}(w)(x) \land Q(R(x))$} 
+%		       [ .{\textbf{vr}}
+%                          {a friend of mine\\S/_R(S_L/NP) \\ $\lambda w_s \lambda R_{<e,t>} \exists x_e. \mathbf{fom}(w)(x) \land R(x)$}
+%                        ]
+%                      ]
+%                      {wins\\S/_LNP \\ $\lambda w_s \lambda x_e. \mathbf{win}(w)(x)$}
+%                   ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+%               ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+%            ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+%        ]
+%
+%\normalsize
+
+\subsection{The non-specific, transparent reading}
+
+For the non-specific, transparent reading we need a mechanism to pass down the actual world to the determiner phrase
+in the embedded clause. Following the lines of Jacobson's account to resolve pronouns \cite[Ch.\ 15]{jacobson2014},
+I propose the following new rules.
+
+\begin{enumerate}[\textbf{g-world.}]
+\item[\textbf{p-world:}] Let $\alpha$  be an expression of the form $\langle [\alpha], X, \sem{\alpha} \rangle$ where $\sem{\alpha}$ is of type $<s,a>$. Then there is an
+expression of the form $\langle[\alpha], X^w, \lambda w_s \lambda w_s^*.\sem{\alpha}(w^*)  \rangle$.  
+\item[\textbf{g-world:}] Let $\alpha$  be an expression of the form $\langle [\alpha], X/Y, \sem{\alpha} \rangle$ where $\sem{\alpha}$ is of type \\$<s,<a,b>>$. Then there is an
+expression of the form \\ $\langle[\alpha], X^w/Y^w, \lambda w_s\lambda w_s^* \lambda C_{<s,<s,a>>} . \sem{\alpha}(w)(C(w)(w_s^*))  \rangle$.  
+\item[\textbf{z-world:}] Let $\alpha$  be an expression of the form $\langle [\alpha], X/Y, \sem{\alpha} \rangle$ where $\sem{\alpha}$ is of type \\$<s,<\vec{s}^c,<s,<a,b>>>>$, where $\vec{s}^c$ denotes $c$ arguments of type $s$, $c\ge 0$. Then there is an
+expression of the form \\ $\langle[\alpha], X/Y^w, \lambda w_s  \lambda C_{\vec{s}^c}. \sem{\alpha}(w)(C)(w))  \rangle$.
+\end{enumerate}
+
+
+So, \textbf{p-world} takes an intensional expression, adds an additional world argument to it and replaces all the occurrences of the original world with the new world. 
+On top of that it adds a superscript to the syntactic category indicating that this expression requires an additional world argument. 
+
+\textbf{g-world} is used to add the
+additional world argument such that expressions which have been modified by  \textbf{p-world} or \textbf{g-world}  can be combined with other expressions. Note that the rule changes an expression
+that expects an extensional argument of type $a$ to an expression that expects an argument of type $<s,<s,a>>$. The addition of two arguments of type $s$ is required as 
+we manually have to extensionalize the arguments. This is necessary because the type-sensitive application function assumes that an expression modified by \textbf{p-world} is looking 
+for an intensional expression, so version (ii) of \textbf{app} is applied when the expressions are combined. 
+
+Finally, \textbf{z-world} is used to merge two world arguments into one. I designed this rule such that it can also handle cases in which there are multiple
+expressions that have been modified by \textbf{p-world}. If that is the case \textbf{z-world} can be either applied repeatedly to the same expression or it can 
+pick an arbitrary world argument to be merged. In case of (\ref{ex:mary-orig}) we do not need this flexibility but in a sentence such as (\ref{ex:three-worlds}) one can derive, for example,  
+the reading in which \textit{the teacher} exists in the belief-worlds of Mary and \textit{the student} exists in the actual world.
+
+\begin{exe}
+\ex \label{ex:three-worlds} Mary thought that the student wants that the teacher leaves. 
+\end{exe}
+
+The following derivation shows how to use these rules to get the non-specific, transparent reading of (\ref{ex:mary-orig}).
+
+%%%%%%%% specific, transparent reading
+
+
+\footnotesize
+\hspace{-2.5cm}
+\Tree [
+         .{to buy a hat just like mine \\ S[INF]^{w} \\ $\lambda w_s \lambda w_s^* \lambda y_e \exists x_e. [ \mathbf{hat-jlm}(w^*)(x) \land \mathbf{buy}(w)(x)(y)]$}
+          [ 
+            .{to \\ S[INF]^{w}/_R(S/_L NP)^w \\ $\lambda w_s \lambda w_s^* \lambda P_{<s,<s,et>>}. P(w)(w^*) $ }
+            [ 
+              .{\textbf{g-world}}
+               {to \\ S[INF]/_R(S/_L NP) \\ $\lambda w_s \lambda P_{<e,t>}. P$}
+            ]
+          ]
+           [
+            .{buy a hat just like mine  \\  (S/_L NP)^w \\  $\lambda w_s \lambda w_s^*. \lambda y_e \exists x_e . [\mathbf{h-jlm}(w^*)(x) \land \mathbf{buy}(w)(x)(y)]$ }
+             [           
+             .{buy \\  (S/_L NP)^w/_R (S/_R(S/_L NP))^w \\ $\lambda w_s \lambda w^*_s\lambda R_{<s,<s,<et,t>>>} \lambda y_e . R(w)(w^*)(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+              [ .{\textbf{g-world}}
+               [ 
+               .{buy \\  (S/_L NP)/_R (S/_R(S/_L NP)) \\ $\lambda w_s \lambda R_{<et,t>} \lambda y_e . R(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+               [ .{\textbf{ar-1}}
+                 {buy \\ (S_L/NP)/_RNP \\ $ \lambda w_s \lambda x_e \lambda y_e. \mathbf{buy}(w)(x)(y)$ }
+               ]
+            ]
+            ]
+            ]
+            [
+             .{a hat just like mine \\ S/_R(S/_LNP)^w \\ $\lambda w_s \lambda w_s^*. \lambda Q_{<e,t>} \exists x_e . [\mathbf{h-jlm}(w^*)(x) \land Q(x)]$}
+             [ .{a \\ (S/_R(S/_LNP))^w/_R N^w \\ $\lambda w_s \lambda w_s^*. \lambda P_{<s,<s,et>>} \lambda Q_{<e,t>} \exists x_e . [P(w)(w^*)(x) \land Q(x)]$}
+              [ .{\textbf{g-world}}
+                {a \\ (S/_R(S/_LNP))/_R N \\ $\lambda w_s \lambda P_{<e,t>} \lambda Q_{<e,t>} \exists x_e . [P(x) \land Q(x)]$}
+              ]
+             ]
+             [
+              .{hat just like mine \\ N^{w} \\ $\lambda w_s \lambda w_s^* \lambda x_e. \mathbf{h-jlm}(w^*)(x) $}
+               [ .{\textbf{p-world}}
+                {hat just like mine \\ N \\ $\lambda w_s \lambda x_e. \mathbf{h-jlm}(w)(x) $}
+               ]
+             ]
+            ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+           ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+        ]
+
+\Tree [
+        .{Mary wants to buy a hat just like mine \\ S \\ $\lambda w_s. \textbf{wants}(w)(\lambda w_s'. \exists x_e. [ \mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w')(x)(\mathbf{m})])(\mathbf{m})$}
+        {Mary \\ NP \\ $\lambda w_s. \textbf{m}$}
+        [ 
+          .{wants to buy a hat just like mine \\ S/_L NP \\ $\lambda w_s \lambda y_e. \textbf{wants}(w)(\lambda w_s'. \exists x_e. [ \mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w')(x)(y)])(y)$ }
+          [ .{wants \\ (S/_L NP)/_R S[INF]^{w} \\  $\lambda w_s \lambda P_{<s,<s,et>>} \lambda y_e. \textbf{wants}(w)(\lambda w_s'. P(w')(w)(y))(y)$  }
+            [ .{\textbf{z-world}}
+              [ .{wants \\ (S/_L NP)/_R S[INF] \\  $\lambda w_s \lambda P_{<s,et>} \lambda y_e. \textbf{wants}(w)(\lambda w_s'. P(w')(y))(y)$}
+              ]
+            ]
+          ]
+          {to buy a hat just like mine \\ S[INF]^{w} \\ $\lambda w_s \lambda w_s^* \lambda y_e \exists x_e. [ \mathbf{hat-jlm}(w^*)(x) \land \mathbf{buy}(w)(x)(y)]$}
+        ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+        ] 
+
+
+%\footnotesize
+%\hspace{-2.25cm}
+%\Tree  [
+%                   .{Mary buys a hat just like mine \\ S^\exists \\ $\lambda w_s \lambda y_e \exists x_e. [x = z \land \mathbf{hat-jlm}(w)(y) \land \mathbf{buy}(w)(x)(\mathbf{m})]$}
+%                     {Mary \\ S^\exists/_R (S/_L NP)^\exists \\ $\lambda w_s \lambda z_e \lambda Q_{<e,<e,t>>}. Q(z)(\mathbf{m})$}
+%                   [
+%                     .{buys a hat just like mine \\ (S/_L NP)^\exists \\  $\lambda w_s \lambda z_e \lambda y_e \exists x_e. [x = z \land \mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w)(x)(y)]$}
+%                        [ .{buys \\ (S/_L NP)^\exists/_R (S/_R(S/_L NP))^\exists  \\ $\lambda w_s  \lambda R_{<e,<<e,t>,t>>} \lambda z_e  \lambda y_e . R(z)(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+%                          [ .{\textbf{g-ex}}
+%                            [ .{buys \\ (S/_L NP)/_R (S/_R(S/_L NP))  \\ $\lambda w_s \lambda R_{<<e,t>,t>} \lambda y_e . R(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+%                              [ .\textbf{ar1}
+%                                  {buys \\ (S/_L NP)/_R NP  \\ $\lambda w_s \lambda x_e \lambda y_e . \mathbf{buy}(w)(x)(y)$}
+%                              ]
+%                            ]
+%                          ]
+%                        ]
+%                      [ .{a hat just like mine \\ (S/_R (S/_LNP))^\exists \\ $  \lambda w_s \lambda z_e \lambda Q_{<e,t>} \exists x_e. [x = z \land \mathbf{hat-jlm}(w)(x) \land Q(x)]$}
+%                        [ .{a \\ (S/_R (S/_L NP))^\exists/_R N^{\exists}  \\ $ \lambda w_s \lambda P_{<e,<e,t>>}  \lambda z_e \lambda Q_{<e,t>} \exists x_e. [P(w)(z)(x) \land Q(x)]$}
+%                          [ .{\textbf{g-ex}}
+%                            {a \\ (S/_R (S/_L NP))/_R N  \\ $ \lambda w_s \lambda P_{<e,t>} \lambda Q_{<e,t>} \exists x_e. [P(x) \land Q(x)]$}
+%                          ]
+%                        ]
+%                        [ .{hat just like mine \\ $N^{\exists}$ \\ $\lambda w_s \lambda z_e  \lambda x_e. [x = z \land \mathbf{hat-jlm}(w)(x)]$}
+%                          [ .{\textbf{p-ex}}
+%                            {hat just like mine \\ N \\ $\lambda w_s \lambda x_e. \mathbf{hat-jlm}(w)(x)$}
+%                          ]
+%                        ]
+%                      ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+%                   ]!\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+%                 ]
+%
+%\vspace{2cm}
+%\hspace{-2.75cm}
+%\Tree [  .{Mary wants that Mary buys a hat just like mine \\ S \\ $\lambda w_s \exists z_e. \mathbf{wants}(w)(\lambda w_s' \exists x_e. [x = z \land \mathbf{hat-jlm}(w')(x) \land \mathbf{buy}(w')(x)(\mathbf{m})])(\mathbf{m})$}
+%             {Mary \\ NP \\ $\lambda w_s. \mathbf{m}$}
+%             [
+%               .{wants that Mary buys a hat just like mine \\ S/_L NP\\ $\lambda w_s \lambda y_e \exists z_e. \mathbf{wants}(w)(\lambda w_s' \exists x_e. [x = z \land \mathbf{hat-jlm}(w')(x) \land \mathbf{buy}(w')(x)(\mathbf{m})])(y)$}
+%               [  .{wants \\  (S/_L NP)/_R CP^\exists \\ $\lambda w_s \lambda P_{<s,<e,t>>} \lambda y_e \exists z_e. \mathbf{wants}(w)(\lambda w_s'. P(w')(z))(y)$}
+%                 [ .{\textbf{z-ex}}
+%                    {wants \\  (S/_L NP)/_R CP \\ $\lambda w_s \lambda P_{<s,t>} \lambda y_e. \mathbf{wants}(w)(P)(y)$}
+%                 ]
+%               ]
+%               [
+%                 .{that Mary buys a hat just like mine \\ CP^\exists \\ $\lambda w_s  \lambda z_e \exists x_e. [x = z \land \mathbf{hat-jlm}(w^*)(x) \land \mathbf{buy}(w)(x)(\mathbf{m})]$}
+%                 [ .{that \\ CP^\exists/_R S^\exists \\ $\lambda w_s  \lambda z_e  \lambda P_{<e,t>}.  P(z)$}
+%                   [ .{\textbf{g-ex}}
+%                     {that \\ CP/_R S \\ $\lambda w_s \lambda P_{t}. P$}
+%                   ]
+%                 ] 
+%                 {Mary buys a hat just like mine \\ S^\exists \\ $\lambda w_s \lambda z_e. \exists x_e. [x = z \land \mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w)(x)(\mathbf{m})]$}
+%               ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+%             ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+%         ]
+
+
+\normalsize
+
+%However, also this account is slightly flawed. Consider sentence (\ref{ex:brother-canadian}).
+
+%\begin{exe}
+%\ex \label{ex:brother-canadian} Mary thinks that my brother is Canadian.
+%\end{exe}
+
+%\cite{percus2000} notes that the overt world approach also allows to generate the following meaning of (\ref{ex:brother-canadian}).
+
+%\begin{exe}
+%\ex $\lambda w_s. \mathbf{thinks}(w)(\lambda w_s'.  \mathbf{canadian}(w)(\mathbf{my-brother}(w')))$
+%\end{exe}
+
+%The problem is that if we allow this meaning, then the sentence would be true whenever there is some Canadian who
+%Mary thinks is my brother even if she does not think that he is Canadian or the person is not actually my brother. There seems to be no 
+%context in which this reading could be true and therefore \cite{percus2000} proposes the following generalization:
+
+%\begin{exe}
+%\ex \textbf{Generalization X}: The situation pronoun that a verb selects for must be coindexed with the nearest $\lambda$ above it.
+%\end{exe}
+
+%\cite{Fintel2002} briefly discuss a possible solution that implements Generalization X with two kinds of world pronouns. Unfortunately,
+%our direct compositional approach also allows to generate this reading
+
+\pagebreak
+
+\subsection{The specific and opaque reading}
+
+Finally, I will discuss how to derive the specific and opaque reading. For the fourth reading we need a way to raise the existential quantifier of the determiner phrase out of the embedded clause
+while applying the world variable introduced by the intensional verb to the restrictor. Therefore we need a mechanism that allows us to raise a quantificational determiner without its restrictor, because
+raising the entire determiner phrase would prohibit us from applying the world variable that is introduced by the intensional verb to the arguments of the determiner.
+Along the lines of the rules I added to the fragment to get the third reading, I propose the following final addition to the fragment.
+
+\begin{enumerate}[\textbf{g-ex.}]
+\item[\textbf{p-ex:}] Let $\alpha$  be an expression of the form $\langle [\alpha], X, \sem{\alpha} \rangle$ where $\sem{\alpha}$ is of type ${<s,<\vec{s}^m,<e,a>>>}$, where $\vec{s}^m$ denotes $m$ arguments of type $s$, $m\ge 0$. Then there is an expression of the form $\langle[\alpha], X^\exists, \lambda w_s  \lambda M_{\vec{s}^m} \lambda y_e \lambda x_e. [x = y \land \sem{\alpha}(w)(M)(x)]  \rangle$.
+\item[\textbf{g-ex:}] Let $\alpha$  be an expression of the form $\langle [\alpha], X/Y, \sem{\alpha} \rangle$ where $\sem{\alpha}$ is of type \\$<s,<\vec{s}^m,<a,b>>>$, where $\vec{s}^m$ denotes $m$ arguments of type $s$, $m\ge 0$. Then there is an
+expression of the form \\ $\langle[\alpha], X^\exists/Y^\exists, \lambda w_s \lambda M_{\vec{s}^m} \lambda P_{<e,a>} \lambda x_e. \sem{\alpha}(w)(M)(P(x))  \rangle$.  
+\item[\textbf{z-ex:}] Let $\alpha$  be an expression of the form $\langle [\alpha], X/Y, \sem{\alpha} \rangle$ where $\sem{\alpha}$ is of type \\$<s,<\vec{s}^m,<<\vec{s}^n,<b,t>>,<c,t>>>>$, where $\vec{s}^m$ and $\vec{s}^n$ denote $m$ resp. $n$ arguments of type $s$, $m\ge 0$ and $n \ge 0$ and $b$ and $c$ are optional arguments of arbitrary type. Then there is an
+expression of the form \\ $\langle[\alpha], X/Y^\exists, \lambda w_s  \lambda M_{\vec{s}^m} \lambda P_{<\vec{s}^n,<e,<b,t>>>} \lambda C_c \exists x_e. \sem{\alpha}(w)(M)(\lambda N_{\vec{s}^n}. P(N)(x))(C)  \rangle$.
+\end{enumerate}
+
+\textbf{p-ex} adds another variable of type $e$ to an expression whose first argument after the world variables is of type $e$ and it adds the condition that the first two arguments have to be identical. It also adds a superscript $\exists$ to the syntactic category to indicate that this expression has an additional variable of type $e$ that should be specified by introducing an existential quantifier.  
+
+\textbf{g-ex} also adds another variable of type $e$ such that phrases can be combined with other phrases that have been modified by \textbf{p-ex} or \textbf{g-ex}.
+
+\textbf{z-ex} adds an existential quantifier to an expression and applies the introduced variable to an expression that has been modified by \textbf{p-ex} or \textbf{g-ex}.
+
+\pagebreak
+
+The fourth reading can then be derived as following.
+
+
+\vspace{1cm}
+%%%%%%%% specific, opaque reading
+
+\footnotesize
+\hspace{-2.25cm}
+\Tree  [
+                   .{to buy a hat just like mine \\ S[INF]^\exists\\ $\lambda w_s \lambda z_e \lambda y_e \exists x_e. [x = z \land \mathbf{hat-jlm}(w)(y) \land \mathbf{buy}(w)(x)(y)]$}
+                   [  .{to \\ S[INF]^\exists/_R(S/_L NP)^\exists \\ $\lambda w_s \lambda P_{<e,et>} \lambda z_e. P(z)$}
+                     [ .{\textbf{g-ex}}
+                        {to \\ S[INF]/_R(S/_L NP) \\ $\lambda w_s \lambda P_{<e,t>}. P$}
+                     ]
+                   ]
+                   [
+                     .{buy a hat just like mine \\ (S/_L NP)^\exists \\  $\lambda w_s \lambda z_e \lambda y_e \exists x_e. [x = z \land \mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w)(x)(y)]$}
+                        [ .{buy \\ (S/_L NP)^\exists/_R (S/_R(S/_L NP))^\exists  \\ $\lambda w_s  \lambda R_{<e,<<e,t>,t>>} \lambda z_e  \lambda y_e . R(z)(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+                          [ .{\textbf{g-ex}}
+                            [ .{buy \\ (S/_L NP)/_R (S/_R(S/_L NP))  \\ $\lambda w_s \lambda R_{<<e,t>,t>} \lambda y_e . R(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+                              [ .\textbf{ar1}
+                                  {buy \\ (S/_L NP)/_R NP  \\ $\lambda w_s \lambda x_e \lambda y_e . \mathbf{buy}(w)(x)(y)$}
+                              ]
+                            ]
+                          ]
+                        ]
+                      [ .{a hat just like mine \\ (S/_R (S/_LNP))^\exists \\ $  \lambda w_s \lambda z_e \lambda Q_{<e,t>} \exists x_e. [x = z \land \mathbf{hat-jlm}(w)(x) \land Q(x)]$}
+                        [ .{a \\ (S/_R (S/_L NP))^\exists/_R N^{\exists}  \\ $ \lambda w_s \lambda P_{<e,<e,t>>}  \lambda z_e \lambda Q_{<e,t>} \exists x_e. [P(z)(x) \land Q(x)]$}
+                          [ .{\textbf{g-ex}}
+                            {a \\ (S/_R (S/_L NP))/_R N  \\ $ \lambda w_s \lambda P_{<e,t>} \lambda Q_{<e,t>} \exists x_e. [P(x) \land Q(x)]$}
+                          ]
+                        ]
+                        [ .{hat just like mine \\ $N^{\exists}$ \\ $\lambda w_s \lambda z_e  \lambda x_e. [x = z \land \mathbf{hat-jlm}(w)(x)]$}
+                          [ .{\textbf{p-ex}}
+                            {hat just like mine \\ N \\ $\lambda w_s \lambda x_e. \mathbf{hat-jlm}(w)(x)$}
+                          ]
+                        ]
+                      ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+                   ]!\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+                 ]
+
+\vspace{2cm}
+\Tree [  .{Mary wants to buy a hat just like mine \\ S \\ $\lambda w_s \exists z_e. \mathbf{wants}(w)(\lambda w_s' \exists x_e. [x = z \land \mathbf{hat-jlm}(w')(x) \land \mathbf{buy}(w')(x)(\mathbf{m})])(\mathbf{m})$}
+             {Mary \\ NP \\ $\lambda w_s. \mathbf{m}$}
+             [
+               .{wants to buy a hat just like mine \\ S/_L NP\\ $\lambda w_s \lambda y_e \exists z_e. \mathbf{wants}(w)(\lambda w_s' \exists x_e. [x = z \land \mathbf{hat-jlm}(w')(x) \land \mathbf{buy}(w')(x)(y)])(y)$}
+               [  .{wants \\  (S/_L NP)/_R S[INF]^\exists \\ $\lambda w_s \lambda P_{<s,<e,et>>}  \lambda y_e \exists z_e. \mathbf{wants}(w)(\lambda w'. P(w')(z)(y))(y)$}
+                 [ .{\textbf{z-ex}}
+                   [ .{wants \\  (S/_L NP)/_R S[INF] \\ $\lambda w_s \lambda P_{<s,et>} \lambda y_e. \mathbf{wants}(w)(\lambda w_s'. P(w')(y))(y)$}
+                    ]
+                 ]
+               ]
+                                 {to buy a hat just like mine \\ S[INF]^\exists \\ $\lambda w_s \lambda z_e \lambda y_e \exists x_e. [x = z \land \mathbf{hat-jlm}(w)(x)$ \\  $\land \mathbf{buy}(w)(x)(\mathbf{m})]$}
+             ]!\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+         ]
+
+
+\normalsize
+
+\vspace{1cm}
+
+This derivation results in a logical form that differs from the logical form of the specific and opaque reading (\ref{ex:mary-orig}d) in three ways. First, there is an additional existential quantifier in the embedded clause, second, there is the additional constraint $x =z$, and third, the entity that is passed as an argument to the restrictor is different. However, the truth conditions of the two statements are identical. If we assume that the set of entities is fixed across all worlds, then  the existence of entity $z$ implies that the existential quantifier in the embedded clause can also select for this entity. Further, the constraint $x =z$ enforces that both existential quantifiers select for the same entity and therefore it also does not matter whether we pass $x$ or $z$ as an argument to the restrictor. So none of the differences influence the final truth condition and both statements are logically equivalent. 
+
+
+\subsection{The \textit{de re} reading revisited}
+
+In section 2.3, I presented a derivation for the \textit{de re} reading of  (\ref{ex:mary-de-dicto-orig}) using the Geach rule. While this worked well for
+this one sentence, I showed that the approach is flawed as we cannot derive the  \textit{de re} reading for sentences such as (\ref{ex:de-re-revisited-fom-wins}).
+
+\begin{exe}
+\ex \label{ex:de-re-revisited-fom-wins} Mary thinks that a friend of mine won.
+\end{exe}
+
+As I mentioned above, we need to change both the scope of the DP and the world variable that gets applied to the restrictor of the quantificational determiner in order to get the \textit{de re} reading of a sentence with a DP in an intensional context.
+The account I presented in section 2.3 does both at the same time by raising the DP above the intensional verb. However, in the previous two sections I proposed new
+rules to perform these two steps individually. And I also defined the \textbf{*-ex} rules in a way
+such that they can work together with the \textbf{*-world} rules. Therefore, we can also get the \textit{de re} reading of  (\ref{ex:mary-orig}) by applying both
+\textbf{*-world} and \textbf{*-ex} rules as following.
+
+\vspace{1cm}
+\footnotesize
+\hspace{-2.25cm}
+\Tree                  [ .{a hat just like mine \\ ((S/_R (S/_LNP))^w)^\exists \\ $  \lambda w_s \lambda w_s^* \lambda z_e \lambda Q_{<e,t>} \exists x_e. [x = z \land \mathbf{hat-jlm}(w^*)(x) \land Q(x)]$}
+                        [ .{a \\ ((S/_R (S/_L NP))^w)^\exists/_R (N^w)^{\exists}  \\ $ \lambda w_s  \lambda w_s^*  \lambda P_{<s,<s,<e,et>>>}  \lambda z_e \lambda Q_{<e,t>} \exists x_e. [P(w)(w^*)(z)(x) \land Q(x)]$}
+                          [ .{\textbf{g-ex}}
+                           [ .{a \\ (S/_R (S/_L NP))^w/_R N^w  \\ $ \lambda w_s \lambda w_s^*  \lambda P_{<s,<s,et>>} \lambda Q_{<e,t>} \exists x_e. [P(w)(w^*)(x) \land Q(x)]$}
+ 			   [ .{\textbf{g-world}}
+                             {a \\ (S/_R (S/_L NP))/_R N  \\ $ \lambda w_s \lambda P_{<e,t>} \lambda Q_{<e,t>} \exists x_e. [P(x) \land Q(x)]$}
+			   ]
+                           ]
+                          ]
+                        ]
+                        [ .{hat just like mine \\ $(N^{w})^{\exists}$ \\ $\lambda w_s \lambda w_s^* \lambda z_e  \lambda x_e. [x = z \land \mathbf{hat-jlm}(w^*)(x)]$}
+                          [ .{\textbf{p-ex}}
+                           [ .{hat just like mine \\ N^{w} \\ $\lambda w_s \lambda w_s^* \lambda x_e. \mathbf{hat-jlm}(w^*)(x)$}
+                             [ .{\textbf{p-world}}
+                               {hat just like mine \\ N \\ $\lambda w_s \lambda x_e. \mathbf{hat-jlm}(w)(x)$}
+                             ]
+                            ]
+                          ]
+                        ]
+                      ] 
+                   
+\vspace{2cm}
+\hspace{-2cm}
+\Tree  [
+                   .{to buy a hat just like mine \\ (S[INF]^w)^\exists\\ $\lambda w_s \lambda w_s^* \lambda z_e \lambda y_e \exists x_e. [x = z \land \mathbf{hat-jlm}(w)(w^*)(y) \land \mathbf{buy}(w)(x)(y)]$}
+                   [  .{to \\ (S[INF]^w)^\exists/_R((S/_L NP)^w)^\exists \\ $\lambda w_s \lambda P_{<s,<s,<e,et>>>} \lambda z_e. P(w)(w^*)(z)$}
+                     [ .{\textbf{g-ex}}
+                        [ .{to \\ S[INF]^w/_R(S/_L NP)^w \\ $\lambda w_s \lambda w_s^* \lambda P_{<s,<s,et>>}. P(w)(w^*)$}
+                          [ .{\textbf{g-world}}
+                            {to \\ S[INF]/_R(S/_L NP) \\ $\lambda w_s \lambda P_{<e,t>}. P$}
+                          ]
+                        ] 
+                     ]
+                   ]
+                          [
+                     .{buy a hat just like mine \\ ((S/_L NP)^w)^\exists \\  $\lambda w_s \lambda w_s^* \lambda z_e \lambda y_e \exists x_e. [x = z \land \mathbf{hat-jlm}(w^*)(x) \land \mathbf{buy}(w)(x)(y)]$}
+                        [ .{buy \\ ((S/_L NP)^w)^\exists/_R ((S/_R(S/_L NP))^w)^\exists  \\ $\lambda w_s \lambda w_s^*  \lambda R_{<s,<s,<e,<et,t>>>>} \lambda z_e  \lambda y_e . R(w)(w^*)(z)(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+                          [ .{\textbf{g-ex}}
+                            [ .{buy \\ (S/_L NP)^w/_R (S/_R(S/_L NP))^w  \\ $\lambda w_s \lambda w_s^* \lambda R_{<s,<s,et,t>>} \lambda y_e . R(w)(w^*)(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+                              [ .{\textbf{g-world}}
+                               [ .{buy \\ (S/_L NP)/_R (S/_R(S/_L NP))  \\ $\lambda w_s \lambda R_{<<e,t>,t>} \lambda y_e . R(\lambda x_e. \mathbf{buy}(w)(x)(y))$}
+                              [ .\textbf{ar1}
+                                  {buy \\ (S/_L NP)/_R NP  \\ $\lambda w_s \lambda x_e \lambda y_e . \mathbf{buy}(w)(x)(y)$}
+                              ]
+                              ]
+                              ]
+                            ]
+                          ]
+                        ]
+                  {a hat just like mine \\ ((S/_R (S/_LNP))^w)^\exists \\ $  \lambda w_s \lambda w_s^* \lambda z_e \lambda Q_{<e,t>} \exists x_e. [x = z $ \\ $\land \mathbf{hat-jlm}(w^*)(x) \land Q(x)]$}
+                 ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+                 ]
+ 
+\Tree [
+        .{Mary wants to buy a hat just like mine \\ S \\ $\lambda w_s \exists z_e. \textbf{wants}(w)(\lambda w_s'. \exists x_e. [ x = z \land \mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w')(x)(\mathbf{m})])(\mathbf{m})$}
+        {Mary \\ NP \\ $\lambda w_s. \textbf{m}$}
+        [ 
+          .{wants to buy a hat just like mine \\ S/_L NP \\ $\lambda w_s \lambda y_e \exists z_e. \textbf{wants}(w)(\lambda w_s'. \exists x_e. [ x = z \land \mathbf{hat-jlm}(w)(x) \land \mathbf{buy}(w')(x)(y)])(y)$ }
+          [ .{wants \\ (S/_L NP)/_R (S[INF]^{w})^\exists \\  $\lambda w_s \lambda P_{<s,<s,<e,et>>>} \lambda y_e. \exists z_e. \textbf{wants}(w)(\lambda w_s'. P(w')(w)(z)(y))(y)$  }
+           [ .{\textbf{z-ex}}
+              [ .{wants \\ (S/_L NP)/_R S[INF]^{w} \\  $\lambda w_s \lambda P_{<s,<s,et>>} \lambda y_e. \textbf{wants}(w)(\lambda w_s'. P(w')(w)(y))(y)$  }
+            [ .{\textbf{z-world}}
+              [ .{wants \\ (S/_L NP)/_R S[INF]\\  $\lambda w_s \lambda P_{<s,et>} \lambda y_e. \textbf{wants}(w)(\lambda w_s'. P(w')(y))(y)$}
+                ]
+                ]
+              ]
+            ]
+          ]
+         {to buy a hat just like mine \\ (S[INF]^w)^\exists\\ $\lambda w_s \lambda w_s^* \lambda z_e \lambda y_e \exists x_e. [x = z $ \\ $\land \mathbf{hat-jlm}(w)(w^*)(y) \land \mathbf{buy}(w)(x)(y)]$}
+        ] !\faketreewidth{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+        ] 
+
+
+
+\normalsize 
+
+\vspace{1cm}
+
+Also in this case the derived logical form differs from the logical form in (\ref{ex:mary-orig}b). On the one hand we have again an additional existential quantifier in the embedded clause which does not change the truth conditions for the same reasons as mentioned above. On the other hand, in case of the derived logical form the restrictor is within the embedded clause while in the LF presented in (\ref{ex:mary-orig}b) it is not. This also does not cause any problems as we still apply the world variable of the actual world to the restrictor and as it does not depend on any variable that is introduced by the intensional verb it will be evaluated in exactly the same way as if it was outside of the embedded clause. So also these two truth conditions are logically equivalent.
+
+
+
+
+
+
+\section{Other Quantifiers}
+
+The careful reader might have noticed already that the \textbf{*-ex} rules crucially depend on the quantifier phrase to contain an extensional quantifier. This does not pose a problem for the discussed sentence but it implies that we cannot derive the specific and opaque meaning of sentences (\ref{ex:mary-all}) and (\ref{ex:mary-most}).
+
+\begin{exe}
+\ex \label{ex:mary-all} Mary wants to buy all hats that are just like mine.
+\ex \label{ex:mary-most} Mary wants to buy most hats that are just like mine.
+\end{exe}
+
+I claim that the specific and opaque reading does not differ from the non-specific and opaque reading in case the quantificational determiner contains a universal quantifier such as in (\ref{ex:mary-all}). The reason for this is that if we assume that the set of entities is fixed across worlds then an expression that is true for every entity in all worlds implies that this expression is also true in every world for all entities. Therefore the logical form in which the universal quantifier has been moved out of the embedded clause and the logical form in which the universal quantifier is within the embedded clause are logically equivalent. 
+
+However, \cite{szabo2010} convincingly argues that there exists a specific and opaque reading for sentences such as (\ref{ex:mary-most}). The logical form of the specific and opaque reading of (\ref{ex:mary-most}) is shown in (\ref{ex:mary-most-lf}).
+
+\begin{exe}
+\ex \label{ex:mary-most-lf} $|\{ x \ | \ \mathbf{wants}(w)(\lambda w_s'. \mathbf{h-jlm}(w')(x) \land \mathbf{buys}(w')(x)(\mathbf{m}))  \}|  $ \\ $ > |\{ x \ | \ \mathbf{wants}(w)(\lambda w_s'. \mathbf{h-jlm}(w')(x) \land \lnot \mathbf{buys}(w')(x)(\mathbf{m}))  \}| $ 
+\end{exe}
+
+Deriving this logical form with the presented mechanisms is likely to be impossible as it would require to satisfy several mutually exclusive constraints at the same time. First, the quantificational determiner has to take scope over the intensional verb. At the same time the world variable introduced by the intensional verb has to be applied to the restrictor and the nuclear scope of the determiner. And lastly, the nuclear scope \textit{[to buy]} also has to be directly combined with the determiner such that it can be negated in one case. In order to fulfill the first requirement the quantificational determiner would have to be directly combined with the phrases \textit{[wants to buy]} and \textit{[hat just like mine]}. However this already implies that it cannot also directly combine with the nuclear scope \textit{[to buy]} and that the intensional verb does not take scope over the restrictor, so we cannot apply its world variable to the restrictor. So raising the determiner phrase seems to be an hopeless endeavor.
+
+At the same time more complex quantificational determiners such as \textit{most} do not have a single expression that expresses the quantificational force and that could be passed along in the tree. Therefore we cannot develop any rules similar to the ones we used to derive the meaning for sentences with existential quantifiers. So also this endeavor does not seem to lead anywhere.
+
+To resolve this issue one would potentially need to use similar tricks as presented by \cite{szabo2010} but as he depends so heavily on quantifier movement and traces it is unlikely that they could be incorporated into a directly compositional framework without major modifications.
+
+\section{Other limitations}
+
+Besides the limitation of which determiners can be used in the embedded clause, my account has two other unresolved issues.  \citet[Ch. 7]{Fintel2002} also discuss sentences such as (\ref{ex:somebody-here}).
+
+\begin{exe}
+\ex \label{ex:somebody-here} Somebody must have been here.
+\end{exe}
+
+Without moving the determiner phrase in subject position we get the \textit{de re} reading of (\ref{ex:somebody-here}). In order to obtain the \textit{de dicto} reading we have to move
+the DP \textit{somebody} below the intensional verb.  \cite{Fintel2002}
+discuss several ways of deriving this reading including the use of the Copy Theory of Movement \citep{chomsky1995}, lowering the DP into the embedded clause, 
+raising the intensional verb above the DP and using a trace of type $<e,<e,t>>$. 
+
+To resolve this issue in a CCG framework we would need a mechanism that allows that the world variable which is introduced by the intensional verb, is used as an argument of the subject. However, the lexical entry of the intensional verb does not allow that the introduced world variable is passed to its subject complement and this limitation cannot be lifted by applying a function to the original predicate. So again, none of the previously employed strategies seem to lead to the desired result.
+
+The second issue deals with sentences such as (\ref{ex:brother-canadian}).
+
+\begin{exe}
+\ex \label{ex:brother-canadian}Mary thinks that my brother is Canadian.
+\end{exe}
+
+\cite{percus2000} notes that the  overt world variable account also makes it possible to derive the following meaning of (\ref{ex:brother-canadian}).
+
+
+\begin{exe}
+\ex \label{ex:brother-canadian-meaning} $\lambda w_s. \mathbf{thinks}(w)(\lambda w_s'.  \mathbf{canadian}(w)(\mathbf{my-brother}(w')))$
+\end{exe}
+
+This is insofar problematic as allowing this reading implies that the statement is true whenever there is a Canadian who
+Mary thinks is my brother even if she does not think that he is Canadian or the person is not actually my brother. There seems to be no 
+context in which this reading could be the intended one, so an ideal account should prevent the derivation of this logical form.
+
+My account also suffers from this problem as it also allows the derivation of the meaning in (\ref{ex:brother-canadian-meaning}) by applying the \textbf{p-world} rule to \textit{[Canadian]}  and there seems to be no
+simple way to disallow this type of overgeneration while preserving the necessary flexibility to derive other valid meanings. 
+
+%this is allowed by adding a world variable to canadian and then using the z-world on thinks...
+
+\section{Conclusion}
+
+I extended the fragment of \cite{jacobson2014} to allow (a) passing of world variables to embedded clauses and 
+(b) raising of existential quantifiers out of embedded clauses. Both accounts work in very similar ways. There is a
+rule that introduces a new bound variable (\textbf{p}), then there is a rule that allows the passing of this variable to a higher 
+position in the tree (\textbf{g}) and then there is a rule that assigns a value to this variable (\textbf{z}) -- either by merging
+two variables or by introducing an existential quantifier.
+
+My entire account is directly compositional and does not require any syntactic movement operations or traces. However, despite the fairly complex apparatus, this account is still
+limited to sentences with determiner phrases in the embedded clause and it cannot derive all readings of sentences with more complex 
+quantificational determiners such as \textit{most}. While in these cases more flexible accounts that use traces seem to have an advantage over the directly compositional account that I presented, they come -- as I discussed earlier --
+with undesired side-effects, so also this approach is not perfect. For this reason, I still believe that I developed a valuable framework to resolve scope ambiguities
+of determiner phrases in intensional contexts and that this work can serve as the basis for future directly compositional accounts to resolve these ambiguities. 
+
+
+
+
+\nocite{jacobson2014}
+\nocite{fodor1970}
+\nocite{heim1998}
+
+\bibliographystyle{plainnat}
+\bibliography{ref}
+\end{document}
