@@ -1,29 +1,29 @@
 import os
-from constants import supported_filetypes
 from parsers.base import *
 from parsers.tex import *
 
 class Ingestor:
     def __init__(self):
-        pass
+        self.parsermap = {
+            ".tex": TexParser,
+        }
 
     def ingest(self, filepath):
         try:
-            # file = open(filepath, 'r')
-            file = "foo"
+            file = open(filepath, 'r')
             name, ext = os.path.splitext(filepath)
-            ext = ext[1:]
-            if ext in supported_filetypes:
-                self._invoke_parser(file, ext)
+            if ext in self.parsermap:
+                return self._invoke_parser(file, ext)
 
         except Exception:
             print("Unable to parse " + filepath)
 
 
     def _invoke_parser(self, file, ext):
-        print("raa")
-        bp = TexParser()
-        print("ree")
+        parser = self.parsermap[ext]()
+        return parser.parse(file)
+
+
 
 
 
