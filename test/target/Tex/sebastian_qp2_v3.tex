@@ -1,0 +1,1352 @@
+% !TEX TS–program = pdflatexmk
+
+\documentclass[lucida,biblatex]{sp} % use if you have the Lucida LaTeX fonts
+%\documentclass{sp}          % default: uses Times font
+\usepackage{textcomp}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usepackage{tikz-dependency}
+\usepackage{gb4e}
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{tipa}
+\usetikzlibrary{fit,positioning}
+\usepackage{setspace}
+\usepackage{color}
+\usepackage{bbm}
+\usepackage{enumitem}
+
+
+\addbibresource{qp-references.bib}
+
+\usepackage[utf8]{inputenc}
+
+%\linespread{2}
+
+
+%tables
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcommand{\possessivecite}[1]{\textciteauthor{#1}'s (\textciteyear{#1})}
+
+\newcounter{excounter}
+
+%=====================================================================
+%========================= preamble material =========================
+
+% Metadata for the PDF output. ASCII-only!
+\pdfauthor{Sebastian Schuster}
+\pdftitle{Gapping Constructions in Universal Dependencies v2}
+%\pdfkeywords{Full keyword list}
+
+% Optional short title inside square brackets, for the running headers.
+% If no short title is given, no title appears in the headers.
+\title{Gapping Constructions in Universal Dependencies v2}
+% \thanks{I would like to thank my QP committee members, Beth Levin and Chris Manning, and in particular my QP chair, Eve Clark,  for their advice and valuable discussions. I would also like to thank Meghan Sumner for her advice on developing the experiment, and Ed King, Masoud Jasbi, and Simon Todd for their feedback and suggestions at various stages of this project.}}
+
+% Optional short author inside square brackets, for the running headers.
+% If no short author is given, no authors print in the headers.
+\author{% As many authors as you like, each separated by \AND.
+  \spauthor{Sebastian Schuster\\ \today}
+}
+
+%=====================================================================
+
+\begin{document}
+
+%=====================================================================
+%============================ frontmatter ============================
+
+\maketitle
+
+%\begin{abstract}
+
+%\end{abstract}
+
+%\begin{keywords}
+%  Keywords (special formatting is fine)
+%\end{keywords}
+
+%=====================================================================
+%============================ article text ===========================
+
+\section{Introduction}
+
+An important property of human language is that speakers can sometimes 
+omit redundant material. One example of this phenomenon is so-called 
+gapping constructions \parencite{Ross1970}. In such constructions, speakers elide a 
+previously mentioned verb that takes multiple arguments, which leaves behind 
+a clause without its main predicate. For example, in the sentence ``\textit{John likes tea, 
+and Mary coffee}'', the verb \textit{likes} was elided from the second conjunct. 
+In this paper, I consider all constructions in which 
+a perdicate that has multiple dependents was elided, including classic cases of gapping 
+\citep{Ross1970}.
+%but also some cases of right node raising \cite{Postal1974}, and some 
+%constructions with phrasal verbs. 
+Throughout this paper, I call the elided material 
+(a predicate and occasionally also some of its arguments) the \textsc{gap}. Further, I refer 
+to the dependents of the gap as \textsc{orphans} or \textsc{remnants}, and I refer to 
+the dependents of the predicate in the clause with the overt predicate as the 
+\textsc{correspondents}, as illustrated with the following annotated sentence.
+
+\begin{center}
+\begin{dependency}
+    \begin{deptext}[column sep=-0.02cm]
+      John \& likes \& tea \& and \& Mary \& coffee \\
+      \textsc{corre-} \& \textsc{overt} \& \textsc{corre-} \& \& \textsc{orphan}/ \& \textsc{orphan}/ \\
+      \textsc{spondent} \& \textsc{verb} \& \textsc{spondent}  \& \& \textsc{remnant} \& \textsc{remnant}  \\ \null \\ \& {\color{blue} \sc full clause} \& \& \& {\color{blue} \sc  \ \ gapped} \& {\color{blue} \sc clause \ \ }  \\
+    \end{deptext}
+  \end{dependency}
+\end{center}
+
+Sentences with gapping pose practical as well as theoretical 
+challenges to natural language processing tasks. From a practical point of view, 
+it is challenging for natural language processing systems to identify and resolve the gaps, 
+which is necessary to interpret these sentences and extract information from 
+them. For example, if one wants to automatically extract all the events from the following sentence from a
+news article, the system has to identify that there are four elided {\it killing}-events, and that each of 
+the conjuncts contains the subject and a locational modifier of each of these events.
+\begin{exe}
+  \setcounter{xnumi}{\value{excounter}}
+  \stepcounter{excounter}
+  \ex Seven were killed in Damietta, four in Ismania, three in Giza, three in Cairo,  and one in Sohag.
+\end{exe}
+Further, these sentences are also hard for statistical parsers to parse as part 
+of their structure deviates significantly from canonical clause structures.
+
+From a more theoretical point of view, these constructions pose challenges to 
+designers of dependency representations. Most dependency representations
+that are used in natural language processing systems
+ \citep[e.g.,][]{Surdeanu2008,DeMarneffe2006,Nivre2016}
+ are concerned with providing surface syntax descriptions without stipulating 
+any additional transformations or empty nodes. Further, virtually all dependency 
+representations consider a verb (either the inflected or the main verb) to be the 
+head of a clause. Consequently, the verb governs all its arguments and modifiers. 
+For these reasons, it is challenging to find a good representation of clauses in which 
+a verb that has multiple dependents was elided, because it is not obvious where 
+and how the remaining dependents should be attached in these cases.
+
+In recent years, the Universal Dependencies (UD) representation \citep{Nivre2016} 
+has become the dominant dependency representation for annotating treebanks in 
+ a large variety of languages. The goal of the UD project is to provide guidelines for 
+cross-linguistically consistent treebank annotations for as many languages as 
+possible. Considering that gapping constructions appear in many languages, 
+these guidelines necessarily also have to include guidelines on how to analyze 
+gapping constructions. While the official guidelines\footnote{See {http://universaldependencies.org/u/overview/specific-syntax.html\#ellipsis}.} 
+provide basic instructions for the 
+analysis of gapping constructions, they lack a detailed discussion of 
+cross-linguistically attested gapping constructions and a thorough explanation 
+why the adopted guidelines should be preferred over other proposals. The purpose 
+of the present paper is therefore to compare the adopted analysis of gapping 
+to another analysis that was considered in the development of the second version of the
+guidelines.
+
+%%%
+% 
+% TODO: gapping in LFG
+% TODO: gapping CCG
+% TODO: gapping in generative grammar
+%
+%%%
+
+
+\subsection{Coordination and ellipsis in UD v2}
+
+Before I discuss the proposals for analyzing gapping constructions in UD v2, 
+I give a brief overview of how UD analyzes coordinated clauses and 
+other forms of elliptical constructions.
+
+Coordinated clauses are analyzed like all other types of coordination:
+By convention, the head of the first conjunct is always the head of the 
+coordinated construction and all other conjuncts are attached to the head 
+of the first conjunct with a \texttt{conj} relation. If there is an overt 
+coordinating conjunction, we\footnote{As I am part of the team who designs the UD guidelines, I use ``we'' to refer to ``the people who work on/within the UD framework''.} attach it to the head of the succeeding 
+conjunct. This captures the fact that the coordinating 
+conjunction forms a syntactic unit with the succeeding conjunct 
+\citep{Ross1967,Gerdes2015}. A sentence with two coordinated clauses is then 
+analyzed as follows.
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:coord}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}[column sep=0.2cm]
+      (\theexcounter) 
+      \& John \& drinks \& tea \& and \& Mary \& eats \& cake \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge[edge unit distance=3ex]{7}{5}{cc}
+    \depedge{7}{6}{nsubj}
+    \depedge[edge unit distance=2ex]{3}{7}{conj}
+    \depedge{7}{8}{obj}
+  \end{dependency}
+\end{center}
+
+For constructions in which a head nominal was elided, UD promotes the highest
+ dependent according to the hierarchy \texttt{amod} $>$ \texttt{nummod} $>$ \texttt{det} 
+ $>$ \texttt{nmod} $>$ \texttt{case}. The promoted dependent is attached to the governor 
+ of the elided nominal with the same relation that would have been used if the nominal 
+ had not been elided. All the other dependents of the elided noun are attached to the 
+ promoted dependent with their regular relations. For example, in the second conjunct 
+ of the following sentence, the head noun \textit{birds} was elided. One therefore promotes 
+ the determiner \textit{some} to serve as the object of \textit{saw}.
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:nom-ellipsis}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.1cm]
+      (\theexcounter) 
+      \& She \& saw \& every \& bird \& but \& he \& saw \& only \& some \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{5}{4}{det}
+    \depedge{3}{5}{obj}
+    \depedge{8}{6}{cc}
+    \depedge{8}{7}{nsubj}
+    \depedge[edge unit distance=1.85ex]{3}{8}{conj}
+    \depedge{10}{9}{advmod}
+    \depedge{8}{10}{obj}
+  \end{dependency}
+\end{center}
+
+In some cases of ellipsis, a verb phrase is elided but there is still an overt copula or auxiliary 
+verb. In these cases, the copula or auxiliary verb is promoted to be the head of the clause 
+and all orphans are attached to the auxiliary.
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:vp-ellipsis}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.2cm]
+      (\theexcounter) 
+      \& Sue \& likes \& pasta \& and \& Peter \& does \& , \& too  \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{7}{5}{cc}
+    \depedge{7}{6}{nsubj}
+    \depedge[edge unit distance=2ex]{3}{7}{conj}
+    \depedge[edge unit distance=1ex]{7}{9}{advmod}
+  \end{dependency}
+\end{center}
+
+\subsection{Two proposals for analyzing gapping in UD}
+
+The constructions that I am primarily concerned with in this paper are gapping constructions in which the governor of multiple phrases was elided. As part of the discussion of version 2 of the UD guidelines, two analyses, the \textsc{orphan} analysis and the {\sc composite} analysis, were considered.
+
+
+\paragraph{Orphan analysis}
+UD v2 ultimately adopted the {\sc orphan} analysis, which is a modified version of a proposal by \citet{Gerdes2015}. According to this analysis, the orphan 
+whose grammatical role dominates all other orphans according to an adaptation of the 
+obliqueness hierarchy,\footnote{
+UD's adaptation prioritizes phrasal over clausal dependents. 
+Translated to UD relations, the adaptation of the obliqueness 
+hierarchy is as follows: \texttt{nsub}j $>$ \texttt{obj} $>$ \texttt{iob}j $>$ \texttt{obl} $>$ 
+\texttt{advmod} $>$ \texttt{csubj} $>$ \texttt{xcomp} $>$ \texttt{ccomp} $>$ \texttt{advcl}. 
+See, for example, \citet{Pollard1994} for a motivation behind this ordering.} is promoted to be the 
+head of the conjunct. The motivation behind using such a hierarchy instead of 
+a simpler strategy such as promoting the leftmost phrase is that it leads 
+to a more parallel analysis across languages that differ in word order.
+We attach all other orphans except for coordinating conjunctions 
+using the special \texttt{orphan} relation. Coordinating conjunctions are attached to the 
+head of the following conjunct with the \texttt{cc} relation. This leads to the analysis 
+in (\ref{ex:en-gap-1}) of a sentence with three conjuncts of which two contain a gap.
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-1}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}[column sep=0.1cm]
+      (\theexcounter)
+       \& Sue \& \textbf{ate} \& meat \& , \& Paul \& fish \& , \& and \& Mary \& noodles \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge[edge unit distance=2ex]{3}{6}{conj}
+    \depedge{3}{4}{obj}
+    \depedge{6}{7}{orphan}
+    \depedge{10}{9}{cc}
+    \depedge[edge unit distance=1.25ex]{3}{10}{conj}
+    \depedge{10}{11}{orphan}
+  \end{dependency}
+\end{center}
+
+The motivation behind using a special \texttt{orphan} relation 
+is that it indicates that the clause contains a gap.
+If one used a regular relation, it might not be clear that a predicate was elided. 
+For example, if instead of using the {\tt orphan} relation, we attached the
+ orphaned clausal subject {\it making pizza} in (\ref{ex:gap-csubj-1}) to the object using
+ the canonical {\tt csubj} relation, one could confuse gapping constructions with copular constructions,\footnote{In order to achieve better cross-linguistic consistency, UD treats the complement of the copula as the head of a copular clause and  all the clausal arguments and modifiers are attached to the complement of the copular verb. E.g., in a simple equative sentence such as ``{\it She is my mother}'', we treat {\it mother}  as the head of the clause and attach the subject {\it she} to {\it mother} using a {\tt nsubj} relation.}
+ especially in languages with zero-copula.
+
+\begin{exe}
+  \setcounter{xnumi}{\value{excounter}}
+  \stepcounter{excounter}
+  \ex \label{ex:gap-csubj-1} Baking bread requires a very hot oven and making pizza an even hotter one.
+\end{exe}
+
+
+%In the rest of this paper, we argue in favor of this proposal for several reasons. First, as we show in the following section, it can
+%be used to analyze a wide range of gapping constructions in many different languages. Second, 
+%as we argue in Section~\ref{sec:structure}, there is evidence that the conjunct with the gap forms a syntactic unit,
+%and this fact is captured by the adopted analysis. Finally, as  discussed in Section~\ref{sec:comparison}, this representation is
+%potentially better suited for automatic parsing than previous proposals.
+
+
+\paragraph{Composite analysis}
+
+Joakim Nivre and Daniel Zeman developed a second proposal\footnote{See http://universaldependencies.org/v2\_prelim/ellipsis.html for a more detailed description of their proposal.} as part of the discussion of the second version of the UD guidelines. Their proposal is based on composite relations such as \texttt{conj>nsubj}, which indicate which relations would be present along the dependency path from the first conjunct to the orphan if there was no gap. For example,  \texttt{X conj$>$nsubj Y} indicates that there would have been a \texttt{conj} relation between X and an elided node,  and an \texttt{nsubj} relation between the elided node and Y. According to this proposal, we would analyze a sentence with a single verb gap as follows.
+
+\begin{center}
+\refstepcounter{excounter}
+\label{ex:en-composite}
+\footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.3cm]
+      (\theexcounter) \& John \& likes \& tea \& and \& Mary \& coffee \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{3}{5}{conj$>$cc}
+    \depedge{3}{6}{conj$>$nsubj}
+    \depedge{3}{7}{conj$>$obj}
+  \end{dependency}
+\end{center}
+
+
+The main motivation behind this proposal is that the relation names provide much more information on the type of dependent than the generic \texttt{orphan} relation, and that in most cases, it is straightforward to turn the gapped clause into a structure that looks more like a canonical clause structure. 
+
+Note that composite relations can also encode dependency paths of lengths greater than 2. For example, in (\ref{ex:en-composite-2}), the relation label between the head of the full clause, {\it seems}, and the object remnant {\it volleyball} encodes a dependency path of length 4.
+
+\begin{center}
+\refstepcounter{excounter}
+\label{ex:en-composite-2}
+\footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.3cm]
+      (\theexcounter) \& Kristina \& seems \& to \& like \& to \& play \& soccer \& and \& Ronald \& volleyball\\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{5}{xcomp}
+    \depedge{5}{7}{xcomp}
+    \depedge{7}{8}{obj}
+    \depedge[edge unit distance=1.75ex]{3}{9}{conj$>$cc}
+    \depedge[edge unit distance=2.0ex]{3}{10}{conj$>$nsubj}
+    \depedge[edge unit distance=2.25ex]{3}{11}{conj$>$xcomp$>$xcomp$>$obj}
+  \end{dependency}
+\end{center}
+
+
+\subsection{Design criteria in UD}
+
+In order to determine which of these two proposals is the better one, I first explain what constitutes a better analysis. The Universal Dependencies framework is not a syntactic theory and does not make predictions about grammaticality or acceptability, so it is impossible (and would not make sense) to assess the two proposals in terms of predictions of grammaticality judgements. Instead, Universal Dependencies should be seen as a dependency formalism in the sense of \citet{Melcuk1988}:
+
+\begin{quote}
+Dependency formalism is a tool proposed for representing linguistic reality, and, like any tool, it may or may not prove sufficiently useful, flexible, or appropriate for the task for which it has been devised; but it cannot be true or false. \\
+\null \hfill  \citep[p. 12]{Melcuk1988}
+\end{quote}  
+
+Along the lines of what Mel'\v{c}uk calls ``useful, flexible or appropriate for the task'',  UD defines the following six, often competing, goals and aims to find the best possible compromise between them. 
+
+\begin{quote}
+\begin{enumerate}[label={\arabic*.}]
+\item UD needs to be satisfactory on linguistic analysis grounds for individual languages.
+\item UD needs to be good for linguistic typology, i.e., providing a suitable basis for bringing out cross-linguistic parallelism across languages and language families.
+\item UD must be suitable for rapid, consistent annotation by a human annotator.
+\item UD must be suitable for computer parsing with high accuracy.
+\item UD must be easily comprehended and used by a non-linguist, whether a language learner or an engineer with prosaic needs for language processing. We refer to this as seeking a {\it habitable} design, and it leads us to favor traditional grammar notions and terminology.
+\item UD must support well downstream language understanding tasks (relation extraction, reading comprehension, machine translation, …).
+\end{enumerate}
+\null \hfill (Christopher Manning, UD documentation\footnote{\url{http://universaldependencies.org/introduction.html\#what-is-needed-for-ud-to-be-successful}})
+\end{quote}
+
+Applied to my research question of determining the best analysis for gapping constructions, these goals translate approximately to the following questions.
+
+\begin{enumerate}[label={\arabic*.}]
+\item \begin{enumerate} 
+\item Which analysis enables consistent analyses of gapping constructions within many languages?
+\item Which analysis assigns a linguistically reasonable structure to gapping constructions?
+\end{enumerate}
+\item Which analysis allows for cross-linguistically consistent annotations of gapping constructions?
+\item Which analysis makes it easier for humans to annotate gapping constructions?
+\item Which analysis leads to annotations that can be automatically parsed with high accuracy?
+\item Which analysis is easier to comprehend for a non-linguist?
+\item Which analysis leads to a better representation for downstream language understanding tasks?
+\end{enumerate}
+
+The {\sc orphan} analysis makes it arguably easier for humans to annotate gapping constructions as, unlike the case with the {\sc composite} analysis, a human annotator does not have to construct the sometimes very complex composite relations during the annotation process, so the {\sc orphan} analysis wins in terms of design goal 3. As for the comprehensibility of the two analyses (design goal 5), neither of them are likely to be understandable by a non-linguist  without an explanation of what gapping constructions are.
+
+The answers to the other questions seem less clear and answering them is the main content of this paper. In Section~\ref{sec:theoretical}, I first look at gapping constructions from a theoretical point of view to answer questions 1 and 2.  In Section~\ref{sec:parsing}, I present several parsing experiments to answer question 4. Finally, in Section~\ref{sec:enhancements}, I try to answer the last question about the usefulness in downstream tasks. 
+
+%For the last question, I make the assumption that the enhanced representation is better suited for downstream language understanding tasks than either of the proposed analyses and therefore, I approximate the usefulness of the analysis in a downstream task as how well one can reconstruct the enhanced representation.
+
+
+\section{Theoretical considerations}
+\label{sec:theoretical}
+
+I first consider the questions whether both proposals can be used to consistently analyze attested gapping construction within and across languages. For that purpose, I discuss what kind of constructions with gapping are attested in the syntactic literature as well as in the English UD treebank \citep{Silveira2014,Nivre2017a,Nivre2017b}, and I show how these constructions can be analyzed according to the {\sc orphan} proposal. 
+
+\subsection{Attested gapping constructions}
+
+\subsubsection{Single verbs}
+
+The most common form of gapping constructions are two or more conjoined clauses
+in which a single inflected verb is missing in all but one of the conjuncts. As illustrated
+in (\ref{ex:en-gap-1}), in SVO languages such as English, the overt verb typically 
+appears in the first conjunct and is elided from all subsequent conjuncts. In languages 
+with other word orders, the overt verb can also appear exclusively in the last conjunct.
+For example, in the following sentence with gapping in Japanese (an SOV language), 
+the verb appears  in the last conjunct and the gap in the first conjunct.
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:jp-gap-1}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}
+     (\theexcounter)
+     \& John-ga \& hon-o \& sosite  \& Mary-ga \& hana-o \& \textbf{katta} \\
+     \& John  \& book \&  and \& Mary \& flower \& bought \\
+    \end{deptext}
+    \depedge{2}{3}{orphan}
+    \depedge[edge unit distance=2.0ex]{2}{7}{conj}
+    \depedge{7}{4}{cc}
+    \depedge{7}{5}{nsubj}
+    \depedge{7}{6}{obj}
+  \end{dependency}
+  \trans `John bought books, and Mary flowers.' \\\normalsize \null \hfill \citep{Kato2006}
+\end{center}
+
+In some languages with flexible word orders such as Turkish, the overt verb can appear 
+in the first or the last conjunct. The orphans typically appear in the same order as the 
+correspondents in the other conjunct as in (\ref{ex:tr-gap-1}a-d) \citep{Bozsahin2000}.
+
+\begin{center}
+  \footnotesize
+  \refstepcounter{excounter}
+  \label{ex:tr-gap-1}
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}
+     (\theexcounter) 
+     a. \& Adam \& kitab\i \& \c{c}ocuk  \& da \& dergiyi \& \textbf{okudu} \\
+     \& man  \& book \&  child \& \textsc{conj} \& magazine \& read \\
+     \&  S \& O \& S \&  \& O \& V  \\
+    \end{deptext}
+    \depedge{2}{3}{orphan}
+    \depedge[edge unit distance=2ex]{2}{7}{conj}
+    \depedge{7}{5}{cc}
+    \depedge{7}{4}{nsubj}
+    \depedge{7}{6}{obj}
+  \end{dependency}
+  
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.1cm]
+     \ \ \ \ \ b. \& Kitab\i \&  adam\& dergiyi \& de\&  \c{c}ocuk  \& \textbf{okudu} \\
+     \&  O \&S \& O \&  \& S \& V  \\
+    \end{deptext}
+    \depedge{3}{2}{orphan}
+    \depedge[edge unit distance=2.5ex]{3}{7}{conj}
+    \depedge{7}{5}{cc}
+    \depedge{7}{4}{obj}
+    \depedge{7}{6}{nsubj}
+  \end{dependency}
+  
+  \begin{dependency}
+    \begin{deptext}[column sep=0.1cm]
+      \ \ \ \ \ c. \& Adam \&  kitab\i  \& \textbf{okudu} \&  \c{c}ocuk  \&  da \& dergiyi \&   \\
+     \&  S \&O \& V \& S \&  \& O  \\
+    \end{deptext}
+    \depedge{4}{2}{nsubj}
+    \depedge[edge unit distance=1.85ex]{4}{5}{conj}
+     \depedge{4}{3}{obj}
+    \depedge{5}{6}{cc}
+    \depedge{5}{7}{orphan}
+  \end{dependency}
+
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.1cm]
+      \ \ \ \ \ d. \& Kitab\i   \& adam  \& \textbf{okudu} \& dergiyi   \&  de \& \c{c}ocuk  \&   \\
+      \&  O \&S \& V \& O \&  \& S  \\
+    \end{deptext}
+    \depedge{4}{2}{obj}
+    \depedge{4}{7}{conj}
+    \depedge{4}{3}{nsubj}
+    \depedge{7}{5}{orphan}
+    \depedge{7}{6}{cc}
+  \end{dependency}
+  \trans `The man read the book, and the child the magazine.'  \\ \normalsize \null \hfill \citep{Bozsahin2000}
+\end{center}
+
+As mentioned above, in order to achieve higher cross-linguistic consistency, 
+the first conjunct is always the head of a coordinated structure in UD. Therefore, 
+the head of the first conjunct is always the head of the coordination, but the internal 
+structure of each conjunct is the same for all four variants in (\ref{ex:tr-gap-1}).
+
+In some cases, e.g., in certain discourse settings, the clause with the gap is not part 
+of the same sentence as the clause with the overt verb \citep{Gerdes2015}. In these 
+cases, we promote one of the orphans to be the root of the second sentence; the 
+internal structure of the two clauses is the same as when they are part of an intra-sentential 
+coordination.
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-2}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}[column sep=0.3cm]
+      (\theexcounter) 
+     \& Sue \& \textbf{likes} \& coffee. \& And \& Paul  \& tea. \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{6}{7}{orphan}
+    \depedge{6}{5}{cc}
+  \end{dependency}
+\end{center}
+
+Further, conjuncts with a gap can also contain additional types of arguments or modifiers 
+that are not present in the full clause. 
+For example, in the sentence in (\ref{ex:en-gap-3}), the oblique modifier \textit{for good} 
+does not correspond to any phrase in the first conjunct.
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-3}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.0ex]
+    \begin{deptext}[column sep=0.1cm]
+    (\theexcounter) 
+    \& They \& \textbf{had} \& \textbf{left} \& the \& company \& , \& many \& for  \& good \\
+    \end{deptext}
+    \depedge{4}{2}{nsubj}
+    \depedge{4}{6}{obj}
+    \depedge{4}{8}{parataxis}
+    \depedge{8}{10}{orphan}
+  \end{dependency}
+  \end{center}
+
+   %\caption{Basic UD tree of a Farsi sentence with a gap within an embedded clause.}
+  %\label{fig:farsi-embedded}
+%\end{figure*}
+
+
+\subsubsection{Verbs and their arguments or modifiers}
+
+Many languages also allow gapping of verbs along with some of their arguments 
+or modifiers as illustrated in the following two examples in Hindi (\ref{ex:hindi-gap-1}) 
+and English (\ref{ex:en-gap-4}).
+
+
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:hindi-gap-1}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.1cm]
+      (\theexcounter)  
+     \& M. \& ne \& P. \& ko \& \textbf{kitaab} \& \textbf{dii} \& aur \&  T. \& ne \& V. \& ko  \\
+      \&          M. \& \tiny{\textsc{erg}} \& P. \& \tiny{\textsc{obj}} \& book \& give \& and \& T. \& \tiny{\textsc{erg}} \& V. \&  \tiny{\textsc{obj}}  \\
+     \end{deptext}
+     \depedge{2}{3}{case}
+     \depedge{7}{6}{obj}
+     \depedge[edge unit distance=2ex]{7}{2}{nsubj}
+     \depedge{4}{5}{case}
+     \depedge{7}{4}{obl}
+     \depedge{7}{9}{conj}
+     \depedge{9}{8}{cc}
+     \depedge{9}{11}{orphan}
+     \depedge{9}{10}{case}
+     \depedge{11}{12}{case}
+  \end{dependency}
+  \trans `Manu gave a book to Pari and Tanu to Vimla' \\ \normalsize \null  \hfill \citep{Kush2016}
+\end{center}
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-4}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.085cm]
+      (\theexcounter) 
+     \& Sue \& \textbf{gave} \& \textbf{a} \& \textbf{book} \& to \& Paul \& and \& John \& to \& Mary \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge[edge unit distance=1.75ex]{3}{9}{conj}
+    \depedge{9}{8}{cc}
+    \depedge{9}{11}{orphan}
+    \depedge{3}{5}{obj}
+    \depedge[edge unit distance=2ex]{3}{7}{obl}
+  \end{dependency}
+\end{center}
+We analyze these cases as analogous to sentences in which only a verb was elided. 
+The subject is promoted to be the head of the second conjunct and the oblique 
+argument is attached with an \texttt{orphan} dependency.
+
+\subsubsection{Verbs and clausal complements}
+
+\citet{Ross1970} points out that gaps can also correspond to a finite
+verb and one or more embedded verbs. For example, in the following 
+sentence, it is possible to elide the matrix verb and all or some of the embedded verbs. 
+\begin{exe}
+  \setcounter{xnumi}{\value{excounter}}
+  \stepcounter{excounter}
+  \ex \label{ex:non-fin-embedded}
+  I want to try to begin to write a novel, ...
+  \begin{xlist}
+    \ex ... and Mary to try to begin to write a play.
+    \ex ... and Mary to begin to write a play.
+    \ex ... and Mary to write a play.
+    \ex ... and Mary a play. \hfill \citep{Ross1970}
+  \end{xlist}
+\end{exe}
+In all of these variants, the matrix verb was elided from the second conjunct. 
+While this is an example of subject control and therefore \textit{Mary} is also the 
+subject of all the embedded verbs, it would be misleading to attach \textit{Mary} to 
+one of the embedded verbs because this would hide the fact that the matrix verb 
+was elided. For this reason, we treat \textit{Mary} as the head of the second conjunct 
+and attach the remainder of the embedded clause with an \texttt{orphan} relation.
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-5}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.3cm]
+      (\theexcounter)
+      \& ... \& and \& Mary \& to \& write \& a \& play. \\
+    \end{deptext}
+      \depedge{2}{4}{conj}
+      \depedge{4}{3}{cc}
+      \depedge{4}{6}{orphan}
+      \depedge{6}{8}{obj}
+  \end{dependency}
+\end{center}
+
+\subsubsection{Non-contiguous gaps}
+
+In the previous examples, the gap corresponds to a contiguous sequence in 
+the first conjunct. However, as highlighted by the following examples, this is 
+not always the case.
+
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:persian-gap-1}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}
+      (\theexcounter) 
+     \& Farmehr \& be \& arus \& rose \& \textbf{d\={a}d} \& va \& Pari \& l\={a}le \\
+      \&         Farmehr  \& to  \& bride \& roses \& gave \& and \& Pari \& tulips \\
+    \end{deptext}
+    \depedge[edge unit distance=2.5ex]{6}{2}{nsubj}
+    \depedge{4}{3}{case}
+    \depedge{6}{4}{obl}
+    \depedge{6}{5}{obj}
+    \depedge{6}{8}{conj}
+    \depedge{8}{7}{cc}
+    \depedge{8}{9}{orphan}
+  \end{dependency}
+  \trans `Farmehr gave roses to the bride and Pari (gave) tulips (to the bride)' \\ \normalsize \null \hfill \citep{Farudi2013}
+\end{center}
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:en-gap-6}
+  \footnotesize
+  \begin{dependency}
+    \begin{deptext}
+      (\theexcounter) 
+      \& Arizona \& \textbf{elected} \& Goldwater \& \textbf{Senator} \& , \& and \& Pennsylvania \& Schweiker \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge[edge unit distance=1.85ex]{3}{8}{conj}
+    \depedge{8}{7}{cc}
+    \depedge{8}{9}{orphan}
+    \depedge{3}{4}{obj}
+    \depedge{3}{5}{xcomp}
+  \end{dependency}
+  \\ \normalsize \null \hfill \citep{Jackendoff1971}
+\end{center}
+
+
+
+While the interpretation of the second conjunct is only possible if one fills both gaps, 
+we are also in these cases primarily concerned with the elided verb because neither 
+of the phrases in the second conjunct depend on the second gap. We can therefore 
+analyze constructions with non-contiguous gaps in a similar manner as constructions 
+with contiguous gaps, namely by promoting one orphan to be the head of the conjunct 
+and attaching all other orphans to this head. 
+
+\subsubsection{Gaps in embedded clauses}
+
+
+\citet{Farudi2013} notes that in Farsi, gaps can appear in embedded clauses even if 
+the corresponding verb in the first conjunct is not part of an embedded clause. For example, 
+in (\ref{ex:farsi-gap-1}), \textit{dust} (`like') is the main verb 
+of the highest clause of the first conjunct but in the second conjunct, the verb was elided from 
+a clause embedded under \textit{mi-dun-e} (`think'). 
+ \begin{center}
+     \refstepcounter{excounter}
+    \label{ex:farsi-gap-1}
+    \footnotesize
+    \begin{dependency}[edge unit distance=2.5ex]
+      \begin{deptext}
+        (\theexcounter) 
+       \& Ma. \& in \& ket\=ab \& ro \& \textbf{dust} \& d\=ar-e \& va \& Mi. \& mi-dun-e \& ke \& m\=am\=an-esh \& un \& ket\=ab \& ro \\
+        \& Ma. \&this \& book \& \textsc{obj} \& like \& have \& and \& Mi. \& know \& that \& mother \& that \& book \&  \textsc{obj} \\
+      \end{deptext}
+      \depedge{6}{2}{nsubj}
+      \depedge{6}{4}{obj}
+      \depedge{4}{5}{case}
+      \depedge{10}{8}{cc}
+      \depedge{10}{9}{nsubj}
+      \depedge{6}{10}{conj}
+      \depedge{10}{12}{ccomp}
+      \depedge{12}{14}{orphan}
+      \depedge{14}{15}{case}
+    \end{dependency}
+    \trans `Mahsa likes this book and Minu knows that her mother (likes) that book' \\ \normalsize \null \hfill \citep{Farudi2013}
+  \end{center}
+
+
+
+\noindent In these cases, we consider the matrix verb 
+to be the head of the second conjunct as we would if there was no gap, and we promote the 
+subject of the embedded clause (\textit{m\=am\=an-esh}) to be the head of the embedded clause. 
+We attach the remaining orphans to the subject with the \texttt{orphan} relation.
+
+
+
+Note that this construction is different from constructions in which parenthetical material \citep{Pollard1994}
+appears in the second conjunct, as in the following English example.
+
+\begin{exe}
+  \setcounter{xnumi}{\value{excounter}}
+  \stepcounter{excounter}
+  \ex {[...] I always had a pretty deep emotional connection to him, and I think he to me.\footnote{Source: hhttp://www.ttbook.org/book/transcript/transcript-humour-healing-marc-maron}}
+\end{exe}
+\begin{center}
+\footnotesize
+  %\refstepcounter{excounter}
+  \label{ex:en-gap-10}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.4cm]
+      %(\theexcounter) 
+      \& ... \& and \& I \& think \& he \& to \& me \\
+    \end{deptext}
+    \depedge{2}{6}{conj}
+    \depedge{6}{3}{cc}
+    \depedge{5}{4}{nsubj}
+    \depedge{6}{5}{orphan}
+    \depedge{8}{7}{case}
+    \depedge{6}{8}{orphan}
+  \end{dependency}
+\end{center}
+In these cases, we promote the subject of the second conjunct (\textit{he}) 
+and attach the parenthetical \textit{I think} as well as \textit{to him} to the subject.
+
+
+\subsubsection{Relative clauses}
+
+
+%  \caption{Basic UD tree of a German subordinate clause with an adverbial clause modifying a gap.}
+ % \label{fig:ger-advcl}
+%\end{figure*}
+
+
+
+
+Several Germanic languages such as German and Dutch show more complex gapping behaviors in sentences with adverbial and relative clauses. For example, \citet{Wyngaerd2007} points out that German also allows a verbal gap in clauses modified by an adverbial clause as in the following example. 
+
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:de-gap-1}
+  \scriptsize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=-0.05cm]
+      (\theexcounter) 
+    \& weil \& P. \& seinen \& Freund \& \textbf{bes.} \& \textbf{wollte} \& , \& was \& mich \& beruhigte \& , \& und \& J. \& seine \& Kinder \& , \& was \& mich \& am\"usierte \\
+      \& b/c \& P. \& his \& friend \& visit \& wanted \& , \& which \& me \& reassured \& , \& and \& J. \& his \& children \& , \& which \& me \& amused \\
+    \end{deptext}
+    \depedge{7}{3}{nsubj}
+    \depedge{6}{5}{obj}
+    \depedge{7}{6}{xcomp}
+    \depedge{7}{11}{advcl}
+    \depedge{11}{10}{obj}
+    \depedge{11}{9}{nsubj}
+    \depedge[edge unit distance=2.0ex]{7}{14}{conj}
+    \depedge{14}{16}{orphan}
+    \depedge{20}{18}{nsubj}
+    \depedge{20}{19}{obj}
+    \depedge[edge unit distance=1.6ex]{14}{20}{orphan}
+  \end{dependency}
+  \trans{`because Peter wanted to visit his friend which reassured me, and Johann (wanted to visit) his children, which amused me'} \\ \normalsize \null \hfill \citep{Wyngaerd2007}
+  \end{center}
+
+\noindent In this example, the two verbs \textit{besuchen wollte} (`wanted to visit') are missing from the second clause, which leaves three orphans, namely a subject, a direct object, and an adverbial clause without a governor. As in the case of two orphaned constituents, we promote the subject to be the head of the clause as it is the highest type of argument in the obliqueness hierarchy, and we attach the two other constituents to the subject with an \texttt{orphan} relation.
+
+
+
+Dutch even allows gaps to appear within relative clauses that modify a constituent in each of the conjuncts. In (\ref{ex:nl-gap-1}), there are in total two elided verbs, and one elided noun. First, the left conjunct is missing the main verb \textit{gesproken} (`talked') in its matrix clause; second, the relative clause of the object in the first conjunct is missing its verb \textit{binnenbracht} (`brought in'); and third, the noun \textit{wijn} (`wine') was elided from the object in the relative clause. The matrix clause of the first conjunct still contains an auxiliary which we 
+promote to be the head of the first conjunct. We further promote the subject of the relative clause, i.e., the relative pronoun, to be the head of the relative clause, and we attach the adjective, which modifies the elided noun, to the promoted subject with an \texttt{orphan} relation.
+
+\begin{center}
+\refstepcounter{excounter}
+\label{ex:nl-gap-1}
+\scriptsize
+\begin{dependency}
+ \begin{deptext}[column sep=-0.05cm]
+   (\theexcounter)
+    \& J. \& heeft \& met \& het \& m. \& dat \& de \& rode \& en \& P. \& heeft \& met \& de \& jongen \& die \& de \& witte \& \textbf{wijn} \& \textbf{binnenbr.} \& \textbf{gespr.} \\
+    \& J. \& has \& with \& the \& girl \& who \& the \& red \& and \& P. \& has \& with \& the \& boy \& who \& the \& white \& wine \& in-brought \& talked \\
+ \end{deptext}
+  
+  \depedge{3}{2}{nsubj}
+  \depedge[edge unit distance=1.95ex]{3}{6}{obl}
+  \depedge[edge unit distance=1.15ex]{3}{21}{conj}
+  \depedge{6}{7}{acl:relcl}
+  \depedge[edge unit distance=1.95ex]{7}{9}{orphan}
+  \depedge[edge unit distance=1.65ex]{21}{10}{cc}
+  \depedge[edge unit distance=1.55ex]{21}{11}{nsubj}
+  \depedge[edge unit distance=1.45ex]{21}{12}{aux}
+  \depedge[edge unit distance=1.65ex]{21}{15}{obl}
+  \depedge[edge unit distance=1.25ex]{20}{16}{nsubj}
+  \depedge[edge unit distance=1.6ex]{20}{19}{obj}
+  \depedge[edge unit distance=1.55ex]{15}{20}{acl:relcl}
+\end{dependency}
+
+\trans{`Jan (talked) to the girl who (brought in) the red (wine), and Piet talked to the boy who brought in the white wine.'} \\ \normalsize \null \hfill \citep{Wyngaerd2007}
+\end{center}
+
+%\subsection{Particle Verbs}
+%
+%Another type of construction in which a verb with multiple dependents has been elided appears with verbal particles as in the English example in (\ref{ex:en-particle-1}).
+%While these constructions are not considered to be instances of gapping by most generative grammarians (see, e.g., \newcite{Aarts1989}), they also involve two phrases which depend on an elided verb in UD and we therefore treat them similarly to other gapping constructions. 
+% 
+%\begin{myquote}
+%\refstepcounter{excounter}
+%\label{ex:en-particle-1}
+%\footnotesize
+%\begin{dependency}[edge unit distance=2.5ex]
+% \begin{deptext}[column sep=0.1cm]
+%   (\theexcounter) \& She \& \textbf{turned} \& the \& radio \& off \& and \& the \& TV \& on \\
+%  \end{deptext}
+%  \depedge{3}{2}{nsubj}
+%  \depedge{3}{5}{obj}
+%  \depedge{3}{6}{compound:prt}
+%  \depedge[edge unit distance=2ex]{3}{9}{conj}
+%  \depedge{9}{7}{cc}
+%  \depedge{9}{10}{orphan}
+%  
+%\end{dependency}
+%\end{myquote}
+%
+%The fact that UD treats auxiliary verbs as dependents on main verbs can lead to some complexities in V2-languages such as German. In the following example, the auxiliary \textit{habe} exclusively appears in the first conjunct whereas the main verb \textit{geschaltet} only appears in the second conjunct. One way to analyze this sentence is to make the auxiliary \textit{habe} a dependent of the main verb \textit{geschaltet} and treating the subject, the object and the particle as orphans in the first conjunct. The alternative is to promote the auxiliary to be the head of the first conjunct and attach all the other phrases in the first conjunct to the auxiliary as in (\ref{ex:de-particle-1}). We argue for the second analysis because the auxiliary shows agreement with the subject in the first conjunct, and the sentence is also grammatical when the auxiliary also appears in the second conjunct as in (\ref{ex:de-particle-2}), which both suggest that the auxiliary should be part of the first conjunct.
+%
+%\begin{myquote}
+%\refstepcounter{excounter}
+%\label{ex:de-particle-1}
+%\footnotesize
+%   \begin{dependency}[edge unit distance=2.5ex]
+%  \begin{deptext}[column sep=-0.05cm]
+%    (\theexcounter) \& Ich \& \textbf{habe} \& den \& R. \& aus- \& und \& du \& den \& F. \& ein\textbf{geschaltet} \\
+%    \& I \& have \& the \& r. \& off \& and \& you \& the \& TV \&turned-on \\
+%  \end{deptext}
+%  
+%  \depedge{3}{2}{nsubj}
+%  \depedge{3}{5}{dobj}
+%  \depedge{3}{6}{compound:prt}
+%  \depedge[edge unit distance=1.5ex]{3}{11}{conj}
+%  \depedge{11}{7}{cc}
+%  \depedge{11}{8}{nsubj}
+%  \depedge{11}{10}{dobj}
+%
+%\end{dependency}
+%   {`I turned the radio off and you (turned) the TV on.'}
+% \end{myquote}
+%   
+% \begin{exe}
+% \footnotesize
+% \setcounter{xnumi}{\value{excounter}}
+%\stepcounter{excounter}
+% \ex  \label{ex:de-particle-2}
+% \gll Ich habe den Radio aus- und du hast den Fernseher ein\textbf{geschaltet}. \\
+% I have the radio off and you have the TV turned-on \\
+%\trans `I turned the radio off you (turned) the radio on.'
+% \end{exe}
+
+
+\subsubsection{Discusssion}
+
+To the best of my knowledge, these six types of gapping constructions make up all currently documented gapping constructions. As my discussion showed, all of these constructions can be consistently annotated according to the {\sc orphan} analysis without the need of any additional stipulations. While I omitted the annotations of these sentences according to the {\sc composite} analysis, all of these sentences can also be annotated consistently according to the {\sc composite} proposal. Therefore, with regard to consistency of annotations within and across languages, both analyses seem to be well suited to annotating gapping constructions.
+
+\subsection{Dependency structure}
+
+The two proposals differ considerably in terms of the resulting dependency structure. The {\sc orphan} analysis respects conjunct boundaries and treats each conjunct as a syntactic unit, whereas the {\sc composite} analysis leads to a flatter structure in which all orphans are attached directly to the head of the full clause. This raises the question whether there is evidence for the individual conjuncts forming a syntactic unit, which would mean that the {\sc orphan} analysis leads to a linguistically more reasonable structure than the {\sc composite} analysis.
+
+Many constituency tests such as topicalization, clefting, and stripping suggest that conjuncts with a gap often do not qualify as a constituent. For example, \citet{Osborne2006b} argues against treating the gapping in (\ref{ex:osborne}) as the coordination of \textit{[the dog a bone]} and \textit{[the man a flower]}, which would suggest that both conjuncts are constituents. He bases his argument on the observation that the former conjunct fails most constituency tests when it is used in a sentence without coordination (\ref{ex:tests}).
+ 
+\begin{exe}
+ \setcounter{xnumi}{\value{excounter}}
+\stepcounter{excounter}
+\ex \label{ex:osborne} She gave the dog a bone, and the man a flower.
+\ex \label{ex:tests} \begin{xlist}
+\ex *The dog a bone, she gave. (Topicalization)
+\ex *It was the dog a bone that she gave. (Clefting)
+\ex ?She gave a dog a bone, not a cat some fish. (Stripping)
+\end{xlist}
+\end{exe}
+
+However, this argument is based on the assumption that \textit{[the dog a bone]} and \textit{[the man a flower]} form a coordinate structure. If we assume instead that the second conjunct is a clause with elided nodes, then none of the above tests seem applicable. At the same time, as already mentioned above, \citet{Gerdes2015} point out that phrases such as \textit{``and the man a flower ''} can be uttered by a speaker in response to someone else uttering a phrase such as \textit{``she gave the dog a bone''}. They take this behavior as evidence for treating the entire conjunct with a gap (including the conjunction) as a syntactic unit. 
+
+Such an analysis is also in line with most accounts of gapping in the generative literature. While there is disagreement on what the deep structure of sentences with gapping should look like and what transformations are employed to derive the surface structure, there is broad consensus that all remnants are part of the same phrase (e.g., \cite{Coppock2001}; \cite{Johnson2009}). One of the most prominent accounts of gapping in CCG \citep{Steedman1990} also first combines the phrases within each conjunct and then combines the two conjuncts to form a sentence. I take all of these facts as weak evidence for treating conjuncts with gaps as syntactic units.
+
+%This argument based on constituency criteria might seem surprising considering that such evidence was dismissed when deciding on analyses for other constructions in UD, such as prepositional phrases. One of the major criticisms of UD has been  that we attach prepositions to their complement instead of treating them as heads of prepositional phrases because this decision appears to be misguided when one considers constituency tests (see, e.g., \cite{Osborne2015}). However, this decision should not be interpreted as UD completely ignoring constituency. It is true that following \citet{Tesniere1959}, UD treats content words with their function words as dissociated nuclei and thus ignores the results of constituency tests for determining the attachment of function words -- an approach that is also taken by some generative grammarians, for example, in the form of the notion of extended projection by \citet{Grimshaw1997}. But importantly, UD still respects the constituency of nominals, clauses and other larger units. For this reason, it is important to have an analysis of gapping that respects larger constituent boundaries as it is the case with the adopted ``orphan'' analysis.
+
+Finally, another advantage of the {\sc orphan} analysis is that this analysis is more consistent with 
+our analysis of other forms of ellipsis. As I mentioned above, we also promote one word that would depend on the elided word in all other cases of ellipsis, and treating gapping constructions analogously increases the overall consistency of the annotations.
+
+\section{Enhanced Representation}
+
+As I mentioned earlier, gapping constructions pose challenges for natural language understanding systems as gapped clauses deviate considerably from canonical clause structures and at least the main predicate is missing from the gapped clause. For this and other phenomena, UD also defines an \textit{enhanced} representation, which may be a graph instead of a tree and which may contain additional 
+nodes and relations \citep{Nivre2016,Schuster2016}. The purpose of this representation is to
+ make implicit relations between content words more explicit in order to facilitate shallow natural language 
+ understanding tasks such as relation extraction. One property of the \textit{enhanced} representation 
+ is that it resolves gaps by adding nodes to \textit{basic}, i.e., strict surface syntax UD trees. Remnants attach to these additional
+ nodes with meaningful relations just as if nothing had been elided,\footnote{A similar analysis was used in the tectogrammatical layer of the Prague Dependency Treebank \citep{PDT2013}.} thus solving the issue of the missing predicate, and in the case of the {\sc orphan} analysis, the issue of having uninformative \texttt{orphan} dependencies. The general idea is to insert 
+ as many nodes as required to obtain a structure  without orphans while keeping the number 
+ of additional nodes to a minimum. On top of additional nodes, we add relations between 
+ new nodes and existing content words so that there exist explicit relations between each 
+ verb and its arguments and modifiers. Note that this analysis is complementary to the other two proposals. Most automatic parsers do not support inserting copy nodes, so adopting an analysis that includes additional nodes would make UD incompatible with most existing parsers, and therefore we opt for having a strict surface syntax representation as well as a graph-based representation.
+ 
+  
+ I now illustrate how different cases of gapping 
+ can be analyzed in the \textit{enhanced} representation based on several representative examples.
+
+The simplest cases are constructions in which a single verb was elided. In these cases, we insert a copy node\footnote{Similar copy nodes are already used for some cases of reduced conjunctions in the \textit{collapsed} and \textit{CCprocessed} Stanford Dependencies representations \citep{DeMarneffe2008} and in the \textit{enhanced} UD representation \citep{Schuster2016}.} of the elided verb at the position of the gap, make this node the head of the conjunct, and attach all orphans to this copy node. For example, for the following sentence, we insert the copy node \textit{likes$'$} and attach \textit{Mary} as a subject and \textit{coffee} as an object.
+
+\begin{center}
+\refstepcounter{excounter}
+\label{ex:en-gap-7}
+\footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=0.2cm]
+    (\theexcounter) \& John \& likes \& tea \& and \& Mary \& \textbf{likes$'$} \& coffee \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{7}{5}{cc}
+    \depedge{7}{6}{nsubj}
+    \depedge[edge unit distance=2.0ex]{3}{7}{conj}
+    \depedge{7}{8}{obj}
+  \end{dependency}
+    \trans `John likes teas, and Mary coffee.'
+\end{center}
+Similarly, we insert a copy node as the new root of a sentence in cases in which the leftmost conjunct contains a gap as, for example, in (\ref{ex:jp-gap-enhanced}).
+\begin{center}
+  \refstepcounter{excounter}
+  \label{ex:jp-gap-enhanced}
+  \footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=-0.025cm]
+     (\theexcounter) \& John-ga \& hon-o \& \textbf{katta$'$}\& sosite  \& Mary-ga \& hana-o \& {katta} \\
+     \& John  \& book \& bought \& and \& Mary \& flower \& bought \\
+    \end{deptext}
+        \depedge{4}{2}{nsubj}
+    \depedge{4}{3}{obj}
+    \depedge[edge unit distance=2.5ex]{4}{8}{conj}
+    \depedge{8}{5}{cc}
+    \depedge{8}{6}{nsubj}
+    \depedge{8}{7}{obj}
+  \end{dependency}
+  \trans `John bought books, and Mary bought flowers.' \\ \normalsize \null \hfill (adapted from \citet{Kato2006})
+\end{center}
+In cases in which arguments or modifiers were elided along with the verb, we still only insert one copy node for the main verb. However, in order to make the relation between the verb and all of its arguments explicit, we also add relations between the new copy node and existing arguments and meaningful modifiers. In (\ref{ex:en-gap-8}), we add a copy node for the elided verb \textit{elected} and a relation between the copy node and \textit{Senator}.
+
+\begin{center}
+\refstepcounter{excounter}
+\label{ex:en-gap-8}
+\footnotesize
+  \begin{dependency}[edge unit distance=2.5ex]
+    \begin{deptext}[column sep=-0.05cm]
+      (\theexcounter) \& Arizona \& elected \& X \& Senator \& and \& Florida \& \textbf{elected$'$} \& Y \\
+    \end{deptext}
+    \depedge{3}{2}{nsubj}
+    \depedge{3}{4}{obj}
+    \depedge{3}{5}{xcomp}
+    \depedge{8}{6}{cc}
+    \depedge{8}{7}{nsubj}
+    \depedge[edge unit distance=2.0ex]{3}{8}{conj}
+    \depedge{8}{9}{obj}
+    \depedge[edge below, edge unit distance=1ex]{8}{5}{xcomp}
+  \end{dependency}
+\end{center}
+%TODO: Mention example with existential quantifier in subject position
+In cases in which a finite verb was elided along with one or more embedded verbs, as in the sentence \textit{``I want to try to begin to write a novel, and Mary a play.''}, we insert one copy node for each elided verb. However, unlike in the previous example, we do not add relations between the copy nodes and the semantically vacuous function word \textit{to} because it is not required for the interpretation of the sentence.
+
+\begin{center}
+\refstepcounter{excounter}
+\label{ex:en-gap-9}
+\footnotesize
+  \begin{dependency}
+    \begin{deptext}[column sep=0.1cm]
+      (\theexcounter) \& ... \& and \& M. \& \textbf{want$'$} \& \textbf{try$'$} \& \textbf{begin$'$} \& \textbf{write$'$} \& a \& play \\
+    \end{deptext}
+    \depedge{5}{3}{cc}
+    \depedge{5}{4}{nsubj}
+    \depedge{2}{5}{conj}
+    \depedge{5}{6}{xcomp}
+    \depedge{6}{7}{xcomp}
+    \depedge{7}{8}{xcomp}
+    \depedge{8}{10}{obj}
+  \end{dependency}
+\end{center}
+
+The motivation behind these design choices is to have direct and meaningful relations between content words. Many shallow natural language understanding systems, which make use of UD such as open relation extraction systems \citep{Mausam2012,Angeli2015} or semantic parsers \citep{Andreas2016,Reddy2017}, use dependency graph patterns to extract information from sentences. These patterns are typically designed for prototypical clause structures, and by augmenting the dependency graph as described above, many patterns that were designed for canonical clause structures also produce the correct results when applied to sentences with gapping constructions.
+
+
+
+
+\section{Parsing Experiments}
+\label{sec:parsing}
+
+As I discussed above, there are several theoretical reasons for preferring the \textsc{orphan} analysis over the \textsc{composite} analysis of gapping constructions. But as I also mentioned before, we do not want to decide on an analysis exclusively on theoretical grounds but instead, we also want to make sure that we can automatically parse gapping constructions with high accuracy. Based on previous parsing experiments, I expect that the \textsc{orphan} analysis is easier to parse for several reasons. First, it leads to fewer long-distance dependencies as compared to the \textsc{composite} analysis and long-distance dependencies are known to be challenging for parsers \citep{McDonald2007}. Second, the \textsc{orphan} analysis has only one dependency label for all gapping constructions, whereas the \textsc{composite} analysis requires many additional relations, most of which are likely to appear very rarely in the training corpus, which in return makes it challenging for statistical parsers to make meaningful generalizations. That all being said, recently developed parsers such as the graph-based parsers by \textcite{Kiperwasser2016} and \textcite{Dozat2017} are much better at dealing with non-projective and long-distance dependencies \citep{Dozat2017b} and therefore some of my assumptions about parseability of the two analyses might no longer hold. I therefore conducted several parsing experiments to determine which of the two proposed analyses is easier to parse. I further investigated two additional related questions. First, is a graph-based parser that takes the entire sentence (and consequently a very large context) into account better at parsing gapping construction than a transition-based parser, which only takes a very narrow context into account when making parsing decisions? And second, does augmenting the training data with several dozen sentences with gapping constructions significantly improve parsing of sentences with gapping?
+
+
+\subsection{Data}
+
+I used the Universal Dependencies English Web Treebank version 2.0 \citep[henceforth \textsc{ewt};][]{Silveira2014,Nivre2017a,Nivre2017b} for training and evaluating parsers. However, as the treebank is relatively small and therefore only contains very few sentences with gapping, I also extracted gapping constructions from the WSJ and Brown portions of the Penn Treebank \citep{Marcus1993} and the GENIA corpus \citep{Ohta2002}. Further, I copied sentences from the Wikipedia page on gapping constructions\footnote{\url{https://en.wikipedia.org/wiki/Gapping}, accessed on Aug 24, 2017}, from various published papers on gapping constructions, and I made up examples similar to the ones found in the literature. The sentences in the \textsc{ewt} already contain annotations according to the \textsc{orphan} analysis, as well as the copy nodes for the enhanced representation. To obtain the annotations for the sentences from the other three treebanks, I converted them from constituency trees to UD version 1 dependency trees using the Stanford converter \citep{Schuster2016}; then, I converted them to UD version 2 using \texttt{udapy} \citep{Popel2017}; and finally, I manually corrected these trees and manually added the empty nodes for the enhanced representation. I used the same conversion pipeline to obtain the dependency trees for the examples from Wikipedia and the linguistic literature but as there exist no gold constituency parses for theses sentences, I first tokenized them using CoreNLP \citep{Manning2014} and then parsed them to constituency trees using the Stanford Parser \citep{Klein2003}. These additional trees constitute the \textsc{gapping} treebank, which I used in combination with the \textsc{ewt} for some of my parsing experiments. I used the default train/development/test splits of the \textsc{ewt} and I split the \textsc{gapping} treebank by putting the first 6 of every 12 sentences in the training split; the 7th, 8th and 9th sentence of every 12 sentences in the development split; and the last 3 of every 12 sentences in the test split, with one exception: My corpus contains four examples similar to (\ref{ex:mary-play-repeated}), each with four varying gap sizes. 
+\begin{exe}
+\ex \label{ex:mary-play-repeated} I want to try to begin to write a novel, and Mary a play. \\
+\null \hfill \citep{Ross1970}
+\end{exe}
+In order to make sure that there is no significant lexical overlap and that the parser observes all possible variants of at least one of the examples, I included all variants of two of these examples in the training split, the variants of one in the development split, and the variants of the last one in the test split.
+
+To obtain the treebank with annotations according to the \textsc{composite} analysis, I automatically converted the enhanced UD trees. Note that a lossless conversion from the enhanced UD trees is possible using the following procedure. I traverse the dependency tree in depth-first order and whenever I encounter an empty node $e$, I store the parent relation $r_p$ of $e$ and then I delete $e$ and attach all of its dependents to the governor of $e$  with a relation that is composed of the original parent relation $r_p$ and the relation between $e$ and the dependent.
+
+Table~\ref{tbl:data-stats} shows several properties of the data splits of the two treebanks as well as their combination.
+
+\begin{table}
+\scriptsize
+\begin{tabularx}{\textwidth}{l | c c c | c c c | c c c }
+& \multicolumn{3}{ c |}{\small } & \multicolumn{3}{ c |}{ \small  } & \multicolumn{3}{ c }{ \small \textsc{ewt + gapping}} \\
+& \multicolumn{3}{ c |}{\small \textsc{ewt}} & \multicolumn{3}{ c |}{ \small  \textsc{gapping}} & \multicolumn{3}{ c }{ \small (\textsc{combined})} \\
+& {\bf Train} & {\bf Dev} & {\bf Test} & {\bf Train} & {\bf Dev} & {\bf Test}& {\bf Train} & {\bf Dev} & {\bf Test}\\ \midrule
+sentences & 12,543 & 2,002 &2,077 & 83  & 39 & 40 &  12,626 & 2,041 & 2,117\\ \hline
+tokens & 204,585 & 25,148 & 25,096  & 2,105 & 1,153 & 1,001 & 206,690 & 26,301 & 26,097\\ \hline
+{sentences with} & 19 & 1 & 1 & 83 & 39 &40 & 102 & 40 & 41\\
+ gapping & 0.15\% & 0.05\% & 0.05\% &  100\% & 100\% & 100\% & 0.81\% & 1.96\%  & 1.94\% \\ \hline
+{copy nodes } & 21 & 2 & 1 & 113 & 52 & 56 & 134 & 54 & 57\\ \hline
+{unique \textsc{comp}.} &18 & 6 & 2 & 32 & 26 & 25 & 39 & 26 & 25  \\
+relations  & & & & & & & &  & \\ \hline
+\end{tabularx}
+\normalsize
+\caption{Treebank statistics. The \textit{copy nodes} row lists the number of copy nodes within each split and the \textit{unique \textsc{comp}. relations} row lists the number of unique composite relations in the treebanks annotated according to the \textsc{composite} analysis. The percentages are relative to the total number of sentences.}\label{tbl:data-stats}
+\end{table}
+
+\subsection{Parsers}
+
+I used two different dependency parsers, a transition-based parser and a graph-based parser. Both of these parsers use neural-network classifiers to predict the governor and dependency label of each token but they differ in how they construct the dependency tree and how they represent the individual tokens.
+
+\paragraph{Transition-based parser}
+
+I used the Java implementation of the dependency parser by \textcite{Chen2014}. This parser is a transition-based (or shift-reduce) parser, which uses a neural network to predict the next transition. Transition-based parsers consist of a stack, which holds all the processed tokens that have not yet been attached to a governor, and a buffer which contains a few (typically two or three) of the yet unprocessed tokens. These parsers operate as follows. At each step, they perform one of three actions. First, they can move a token from the buffer to the top of the stack and add a new token to the buffer (\textsc{shift}); second, they can add a dependency arc from the top-most element on the stack to the second element on the stack and remove the second element from the stack (\textsc{left-arc}); and third, they can add a dependency arc from the second element to the top-most element on the stack and remove the top-most element from the stack (\textsc{right-arc}). The parser performs these steps until there are no more tokens on the buffer and there is just one element left on the stack, which will always be the root of the dependency tree. More intuitively, one can imagine the working of the parser as follows. It reads in one token after another and whenever it has read in the governor and the dependent of a relation, it adds an arc between these two tokens. While I described the procedure here using just three possible transitions, in practice, the classifier jointly predicts the direction of an arc and the dependency label, so for a set of $L$ dependency labels, there are $|L|$ \textsc{left-arc} and another $|L|$ \textsc{right-arc} transitions.
+
+Transition-based parsers primarily vary in the type of classifier and the set of features that are used to predict the transitions. The parser by \textcite{Chen2014} embeds tokens, as well as dependency labels and part-of-speech tags into a high-dimensional vector space and then represents a parser state as the concatenation of these embeddings of 1) the three top-most tokens on the stack, 2) some of its children and grand-children, and 3) the three tokens on the buffer. It then passes this input through a cubic activation function which results in a hidden representation that is then passed through a logistic regression classifier in order to predict the most probable transition. The main advantage of this family of parsers is their speed. The number of transitions for a sentence of length $n$ is always exactly $2n-1$, so it only has to make $O(n)$ predictions.
+
+Note that this parser is greedy, i.e., it makes irreversible parsing decisions before it has encountered all tokens in a sentence, and that it only takes a local context into account, so it bases its decisions for the head of a token only on other tokens in the ultimate linear (tokens on the stack and the buffer) and left structural (tokens on the stack) vicinity. This is the reason why long-distance dependencies are often challenging for this type of parser as it is often hard to get these dependencies right without considering the entire sentence.
+
+\paragraph{Graph-based parser}
+
+The second parser that I used for my experiments is the dependency parser by \textcite{Dozat2017}. This parser is a graph-based parser and differs from the \textcite{Chen2014} parser in terms of how the dependency tree is constructed and how the features are encoded. For a given sentence, graph-based parsers compute the probability of a dependency $i\rightarrow j$ for each pair of tokens $(i, j)$ s.t. $i\ne j$. This matrix of probabilities can be viewed as the weight of the edges in a fully connected directed graph, in which each vertex corresponds to a token and each edge to a dependency arc. The highest-scoring dependency tree  can then be obtained by computing the maximum spanning tree (MST) of this graph, i.e., a tree that contains all the nodes and whose  total edge weights are maximal. This results in an unlabeled dependency tree. For each predicted dependency arc, the parser then adds dependency labels in a second step using another classifier.
+
+
+The parser by \textcite{Dozat2017} uses neural-network classifiers to compute the probabilities of each dependency arc and to determine the labels for each arc. These classifiers extract their features from the hidden states of a bidirectional long short-term memory (biLSTM) network \citep{Schuster1997,Hochreiter1997}. biLSTM networks read in a sentence from left to right and from right to left and compute for each token a vector representation that encodes the token itself as well as the preceding and succeeding parts of the entire sentence. Therefore, the representation of each token captures not only the information that is provided by the token itself but also the information that is provided in the sentence which leads to a highly context-specific representation. Apart from making use of more context-sensitive features, this parser also has the advantage that it makes parsing decisions only after it has processed the entire sentence and therefore it is less prone towards making wrong decisions that are caused by partial information.
+
+\subsection{Experimental Setup}
+
+I used the treebanks with gold tokenization for my experiments. However, I replaced the gold POS tags with predicted fine-grained and universal part-of-speech tags. I used the tagger by \textcite{Dozat2017b}, which I trained on the \textsc{combined} training corpus. Both parsers make use of pre-trained word embeddings and I used the word2vec \citep{Mikolov2013} embeddings that were provided by the organizers of the CoNLL 2017 Shared Task on Dependency Parsing \citep{Zeman2017}. For training the transition-based parser, I used the default parameters, and for training the graph-based parser, I used the same parameters as \textcite{Dozat2017b}.
+
+I trained each parser on four different training sets: \textsc{combined-orphan} which contains all the training data of the \textsc{combined} dataset annotated according to the \textsc{orphan} analysis; \textsc{ewt-orphan} which contains all the training data of the \textsc{ewt} dataset annotated according to the \textsc{orphan} analysis, and \textsc{combined-composite} and \textsc{ewt-composite}, which are the same two datasets annotated according to the \textsc{composite} analysis. For the parsers trained on the \textsc{ewt} training data, I used the \textsc{ewt} development set for model selection and for the parsers trained on the \textsc{combined} training data, the \textsc{combined} development set.
+
+
+
+\subsection{Evaluation}
+
+I evaluated the parsers using the two standard metrics for dependency parsing, namely unlabeled attachment score (UAS) and labeled attachment score (LAS). These scores are computed as follows.
+
+\[
+\mbox{UAS} = \frac{\mbox{number of tokens with correct governor}}{\mbox{number of tokens}} \times 100 
+\]
+
+\[
+\mbox{LAS} = \frac{\mbox{number of tokens with correct governor and dependency label}}{\mbox{number of tokens}} \times 100
+\]
+
+\noindent I used the official evaluation script of the CoNLL 2007 Shared Task \citep{Nivre2007} to compute these two scores.
+
+As my primary concern is how well the parsers are able to parse gapping constructions, I further computed the LAS and UAS for all tokens that are governed by a gap (LAS$_{g}$ and UAS$_{g}$).
+
+For pairwise comparisons of results, I use a two-tailed approximate randomization significance test \citep{Yeh2000,Noreen1989} to test whether two results differ significantly. I adapted
+the {\tt sigf} package \citep{Pado2006} to work with dependency metrics for this purpose.
+
+
+\subsection{Results and Discussion}
+
+\begin{table}
+\footnotesize
+\begin{tabularx}{\textwidth}{l| l | c c   | c c   | c c   }
+				&	&	\multicolumn{2}{c | }{\textsc{ewt}} 	&	\multicolumn{2}{c | }{\textsc{gapping}} 	&	\multicolumn{2}{c  }{\textsc{combined}} 		\\
+				&	&	LAS&	UAS&	LAS&	UAS	& LAS&	UAS	\\\midrule
+ & \textsc{ewt-orphan} 			&	81.38&	{\bf \color{blue}85.15}&	73.28&	79.68	& 81.03&	{\bf \color{blue}84.92}	\\
+Transition- & \textsc{comb.-orphan}	&	{\bf \bf \color{blue} 81.43}&	85.00&	{\bf \color{blue} 75.67}&	{\bf \color{blue}81.08} &	{\bf \color{blue}81.18}&	{84.83}	\\
+based parser & \textsc{ewt-composite}		&	81.38&	85.06&	69.92&	75.00 &	80.88&	84.62	\\ 
+ & \textsc{comb.-composite} 	&	{81.27} &	{84.82}&	72.41&	78.09 &	80.89&	84.53	\\ \midrule
+&	\textsc{ewt-orphan} 	&		87.26&	90.52&	77.99&	84.46&		86.86&	90.26		\\
+Graph-based &	\textsc{comb.-orphan}&	87.29&	90.59&	{\bf 82.77} &	{\bf 88.75} &		{\bf 87.09}&	{\bf 90.51}	\\
+parser &	\textsc{ewt-composite} 	&	{\bf 87.60}&	{\bf 90.83}&	75.10&	79.58&		87.06&	90.34		\\
+&	\textsc{comb.-composite}&		87.25&	 90.54&	81.37&	87.44&		{86.99} &	{90.41}		\\
+
+\end{tabularx}
+\caption{Labeled attachment score (LAS) and unlabeled attachment score (UAS) of the various parser models on the three {\bf development} sets. The overall best result in each column is highlighted in \textbf{bold} and the best result of the transition-based parser is highlighted in \textbf{\color{blue} blue}.} \label{tbl:results-dev}
+\end{table}
+
+\begin{table}
+\footnotesize
+\begin{tabularx}{\textwidth}{l| l | c c   | c c   | c c   }
+				&	&	\multicolumn{2}{c | }{\textsc{ewt}} 	&	\multicolumn{2}{c | }{\textsc{gapping}} 	&	\multicolumn{2}{c  }{\textsc{combined}} 		\\
+				&	&	LAS&	UAS&	LAS&	UAS	& LAS&	UAS	\\\midrule
+ & \textsc{ewt-orphan} 			&	{80.81}&	84.26&	69.63&	75.29&	{80.39}&	{83.92}	\\
+Transition- & \textsc{comb.-orphan}	&	{81.10}&	{\bf \color{blue} 84.65}&	{\bf \color{blue} 74.48}&	{\bf \color{blue} 80.60}&	{\bf \color{blue} 80.85}&	{\bf \color{blue} 84.49}	\\
+based parser & \textsc{ewt-composite} 	&	80.93&	84.42&	65.19&	71.35&	80.33&	83.92	\\
+& \textsc{comb.-composite}		&	{\bf \color{blue} 81.11}&	84.64&	69.14&	75.29&	80.65&	84.29	\\ \midrule
+&	\textsc{ewt-orphan} 	&		{\bf 87.16}&	\bf{90.56}&	74.94&	80.63&	86.70&	90.18		\\
+Graph-based &	\textsc{comb.-orphan}&	87.13&	90.46&	{\bf 80.51}&	{\bf 85.61}&	{\bf 86.88}&	{\bf 90.27}		\\
+parser &	\textsc{ewt-composite} 	&	87.14&	90.51&	72.27&	76.68& 86.58	&	89.98		\\
+&	\textsc{comb.-composite}&		{87.02} &	90.32 &	77.38&	83.53&	{86.65} &	{90.06}		\\
+\end{tabularx}
+\caption{Labeled attachment score (LAS) and unlabeled attachment score (UAS) of the various parser models on the three {\bf test} sets. The overall best result in each column is highlighted in \textbf{bold} and the best result of the transition-based parser is highlighted in \textbf{\color{blue} blue}.}  \label{tbl:results-test}
+\end{table}
+
+\begin{table}
+\footnotesize
+\begin{tabularx}{\textwidth}{l| l |  c c   | c c   }
+&	&				 	\multicolumn{2}{c|}{\small \textsc development}	&		\multicolumn{2}{c}{\small \textsc test}			\\
+&	&					\ \ LAS$_g$\ \ & \ \	UAS$_g$ \ \ &	\ \ 	LAS$_g$ \ \ & \ \ 	UAS$_g$ \ \ 			\\ \midrule
+ & \textsc{ewt-orphan} 			&		37.89&		58.39&		31.51		&46.58		\\
+Transition- & \textsc{combined-orphan}	&		{\bf \color{blue} 44.10}&		{\bf \color{blue} 60.87}&		{\bf \color{blue} 43.15}		&{\bf \color{blue} 58.22}		\\
+based parser & \textsc{ewt-composite} \ \ \ \  	&		0.00&		16.15&		0.00 		&18.49		\\
+& \textsc{combined-composite}		&		4.35&		24.22&		6.85 		&25.34		\\\midrule
+&	\textsc{ewt-orphan} 	&				32.92&		52.17&		28.08		&43.84		\\
+Graph-based &	\textsc{combined-orphan}&						{\bf 60.87}&	{\bf 76.40}&	{\bf 57.53}	&{\bf 67.81}	\\
+parser &	\textsc{ewt-composite} 	&					0.00&		9.94&		0.00 		&7.53		\\
+&	\textsc{combined-composite}&					40.37&		60.25&		33.56		&50.68		\\
+\end{tabularx}
+\caption{Labeled attachment score (LAS) and unlabeled attachment score (UAS) of the various parser models on the {\bf gapping constructions} in the  {\sc combined} development and test sets.}  \label{tbl:results-gapping}
+\end{table}
+
+
+Tables~\ref{tbl:results-dev} and \ref{tbl:results-test} show the results of all the parsing models on the development sets and test sets, respectively. Table~\ref{tbl:results-gapping} further shows the results for the relations involved in gapping constructions. 
+
+
+\paragraph{Effect of augmenting the training data} 
+Independent of the parser and annotation scheme, augmenting the training data with additional sentences with gapping improved the results on the {\sc gapping} test sets ($p<0.001$ for the graph-based parser; $p<0.01$ for the transition-based parser). Further, the variance of the results on the {\sc ewt} test sets is extremely low ($<$ 0.05) for a given parser and the differences are not statistically significant. This suggests that 
+adding additional gapping constructions has no significant effect on 
+%Interestingly, for the graph-based parser the additional training data also slightly improved the results on the {\sc ewt} development and test sets. For the transition-based parser, this is only true on the development set; the transition-based models that were trained only on the {\sc ewt} performed slightly better on the {\sc ewt} test set. 
+sentences without gapping but a significant effect on sentences with gapping. The latter result is further supported if we consider the results in Table~\ref{tbl:results-gapping} on only relations involved in gapping constructions. Including more sentences with gapping increased the UAS$_g$ and the LAS$_g$ by up to 51 points. For the graph-based parser, this lead to highly significant improvements in terms of  UAS$_g$ and the LAS$_g$ ($p<0.001$) independent of the annotation scheme; for the transition-based parser, adding more examples significantly increased both scores when parsing to the {\sc orphan analysis} ($p<0.05$) but it did not lead to significant improvements when parsing to the {\sc composite} analysis. All these results suggest that both parsers, and especially the graph-based parser, can make useful generalizations based on the additional gapping constructions present in the training data, but at the same time, that the increased exposure to gapping does not lead the parsers to ``hallucinate'' gapping constructions.
+
+\paragraph{Effect of the parser}
+
+Overall, when trained on the same dataset, the graph-based parser performed significantly better than the transition-based parser on all test sets  ($p<0.01$ for all pairwise comparisons of labeled scores; $p<0.05$ for all comparisons of unlabeled scores). This is not surprising considering that the graph-based parser uses a better token representation and makes global decisions, whereas the transition-based parser takes only the local context into account. Further, the graph-based parser has many more parameters than the transition-based parser, which allows it to learn more fine-grained distinctions than the transition-based parser. Apart from the overall difference in performance, the two parsers also showed differences in how well they were able to parse gapping constructions to the two different representations, which I discuss in more detail below.
+
+Considering that the two parsers differ along two dimensions, namely their method of constructing the tree as well as their feature representation, it is impossible to distinguish whether the better representation or the non-greedy inference is the main driver of the higher parsing accuracy, but in general it seems that taking all the information of the sentence into account when making parsing decisions is beneficial. \textcite{Kiperwasser2016} discuss a transition-based parser that uses a very similar feature representation as the parser by \textcite{Dozat2017}, so a future experiment could be to compare a transition-based and a graph-based parser that use a similar feature representation.
+
+\paragraph{Effect of the representation}
+
+The main question that I tried to answer in my experiments is whether one of the two analyses of gapping is easier to parse. As I mentioned before, I expected the {\sc orphan} analysis to be easier to parse because of the smaller label space as well as the fewer long-distance dependencies. This seems to be true for the transition-based parser. The transition-based parser  performed significantly better when trained on data that was annotated according to the {\sc orphan} analysis independent of the training set (LAS differences: $p<0.05$; UAS differences: $p<0.01$). If one only considers the relations involved in gapping constructions in Table~\ref{tbl:results-gapping}, it seems as if my predictions were right. Both  the UAS$_g$ and the LAS$_g$ on the test set are extremely low for the model that was trained on the {\sc combined composite} training data. The low LAS$_g$ suggests that the model is struggling with choosing the right relation from the large label space, and the low UAS$_g$ suggests that the model is struggling with the attachment, presumably due to its inability to reconstruct the numerous long-distance dependencies. The model that was trained on the {\sc combined orphan} data, on the other hand, is significantly better ($p<0.001$) at choosing the correct attachment and dependency label as compared to the model trained on the {\sc combined composite} data.
+
+For the graph-based parser, these findings also hold but the differences are smaller. On the {\sc gapping} test set, the graph-based parser performed significantly better ($p<0.001$) when trained on the {\sc orphan} data as compared to the {\sc composite} data. However, as shown in Table~\ref{tbl:results-gapping}, the difference between representations in terms of UAS$_g$ and the LAS$_g$ is much smaller (but still significant, $p<0.01$) for the graph-based parser.
+%In fact, the graph-based parser performs slightly better on the \textsc{combined composite} development and test sets than on the \textsc{combined orphan} data sets. 
+The larger number of parameters of this parser, seems  to allow it to learn better distinctions between the various composite relation labels and therefore this parser seems to struggle less with the large label space. However, if we consider the models that were trained on the {\sc ewt}, which only contains a small number of sentences with gapping, we observe a stark contrast between the two representations. Not surprisingly, if the parser only observed very few different composite labels in the training data, it fails to assign the correct label to many constructions in the test data because it can only output relations that were present in the training data. Therefore the LAS$_g$ on the test set of the {\sc ewt composite} model is much lower (0.00) than the score of the {\sc combined composite} model (33.56), which was trained on many different gapping constructions. %($p<0.001$)%
+For the models trained on the \textsc{orphan} representation, fewer training examples are less of an issue. In fact, there is no significant difference in terms of $LAS_g$ and $UAS_g$ between the  {\sc combined composite} and the {\sc ewt orphan} model despite the fact that the latter was trained on much fewer gapping constructions. While augmenting the training data with more examples also helped performance of the {\sc orphan} analysis parser ($p<0.001$), this suggests that the {\sc orphan} analysis makes it much easier for parsers to learn useful generalizations from a realistic number of examples while the {\sc composite} analysis requires many more training examples.
+
+In conclusion, while the graph-based parser is able to parse some gapping constructions to the \textsc{composite} representation when it was trained on a sufficient number of examples, the results of these experiments suggest that the {\sc orphan} representation is easier to parse. This is in particular true for the transition-based parser, but to a large extent also for the graph-based parser.
+
+
+
+\section{Enhancement experiments}
+\label{sec:enhancements}
+
+Lastly, I try to answer the question of which of the two analyses leads to a representation that is better suited to downstream natural language understanding tasks. As I mentioned before, many downstream systems use dependency patterns that are designed for canonical clause structures and therefore it is reasonable to assume that neither of the two proposals are good representations for downstream tasks. However, as the enhanced representation mitigates the problem of non-conventional clause structures to a large degree, we can expect this representation to be well suited for downstream tasks. Extrinsic evaluations are very time-consuming because one has to train many complex downstream systems. Further, given the fact that gapping constructions are relatively rare, it is unlikely that one would see statistically significant differences if one evaluated different representations on existing downstream tasks. I therefore approximate the degree of usefulness in downstream tasks with how well one can automatically reconstruct the enhanced representation from surface syntax dependency trees, instead of actually performing an extrinsic evaluation.
+
+The two analyses of gapping contain very different information and therefore require different procedures to derive the enhanced representation. 
+\subsection{Orphan procedure}
+
+The {\sc orphan} analysis of gapping constructions provides information on which arguments are dependents of an elided predicate. However, it lacks information on the types of arguments as well as on what exactly has been elided. The task of obtaining the enhanced representation therefore consists  of determining and copying the tokens that have been elided as well as determining to which of the copied tokens using which relation the orphaned arguments should be attached.  
+
+In developing a procedure to perform this task, I made use of the fact that in the vast majority of cases, all the types arguments and modifiers that are expressed in the conjunct with a gap are also expressed in the full conjunct. The problem of determining which nodes to copy and which relations to use can therefore be reduced to the problem of aligning arguments in the gapped conjunct to the arguments in the full conjunct. I devised the following procedure to obtain the enhanced representation from a tree that was annotated according to the {\sc orphan} analysis.
+\begin{enumerate}
+\item Create a list $F$ of arguments of the head of the full conjunct by considering all core argument dependents of the conjunct's head as well as clausal and nominal non-core dependents.
+\item Create a list $G$ of arguments in the gapped conjunct by considering the head of the gapped conjunct as well as all its {\tt orphan} dependents.
+\item Find the highest-scoring alignment of the arguments in $G$ to the arguments in $F$.
+\item Copy the head of the full conjunct and attach the copy node $c$ to the head of the full conjunct.
+\item For each node $g_i$ that has been aligned to $f_j$, attach $g_i$ to $c$ with the same relation as the parent relation of $f_j$, e.g., if $f_j$ is attached to the head of the full conjunct with an {\tt nsubj} relation, also attach $g_i$ to $c$ with an {\tt nsubj} relation.
+\item Repeat steps i.-v. as long as there are remaining conjuncts with gaps.
+\end{enumerate}
+
+A crucial step in this procedure is the third step, determining the highest-scoring alignment. This can be done straightforwardly with the sequence alignment algorithm by \textcite{Needleman1970} if one defines a similarity function $sim(g_i, f_j)$ that returns a similarity score between the arguments $g_i$ and $f_j$. I defined $sim$ based on the intuitions that often, parallel arguments are of the same syntactic category, that they are introduced by the same function words (e.g., the same preposition), and that they are closely related in meaning. The first intuition can be captured by checking whether the part-of-speech tags of the heads of the two arguments match. The other two intuitions can be captured by embedding each of the two arguments into a high-dimensional vector-space and then computing their euclidean distance. In order to embed the arguments, I retrieve the vector for each of the tokens in each of the arguments from a pre-trained 100-dimensional GloVe \citep{Pennington2014} word embedding matrix and then average the token vectors to obtain an argument vector. Given the POS tags $t_{g_i}$ and $t_{f_j}$ and the argument embeddings $v_{g_i}$ and $v_{f_j}$, $sim$ is defined as follows.
+$$sim(g_i, f_j) = - \lVert v_{g_i} - v_{f_j}\rVert_2 + \mathbbm{1}\left[t_{g_i} = t_{f_j} \right] \times pos\_mismatch\_penalty $$
+$pos\_mismatch\_penalty$ is an empirical parameter which I set to $-2$ as this value led to the best performance on the training data.
+
+This procedure can be used as described for almost all sentences with gapping constructions. However, if parts of an argument were elided along the main predicate, it can become necessary to copy more than one node. I solved this issue by considering the alignment not only between complete arguments in the full clause and the gapped clause but also between partial arguments in the full clause and the complete arguments in the gapped clause. For example, for the sentence ``{\it Mary wants to write a play and Sue a book}'' the complete arguments of the full clause are \{{\it Mary}, {\it to write a play}\} and   the arguments of the gapped clause are \{{\it Mary}, {\it a book}\}. In this case, I also consider the list of partial arguments  \{{\it Mary}, {\it a play}\} and if the arguments of the gapped conjunct align better to the list of partial arguments, I use this alignment. However, now that the token {\it write} is part of the dependency path between {\it want} and {\it play}, I also have to make a copy of {\it write} to reconstruct the enhanced representation of the gapped clause.
+
+\subsection{Composite procedure}
+
+%\begin{algorithm}
+%\begin{algorithmic}[1]
+% \State  copyNodes $\leftarrow$ HashMap()
+%  \Function{UncollapseCompositeRelations}{$G=(V,E)$} \\ \Comment{$G$ is a dependency graph with nodes $V$ and edges $E$.}
+%  \For{edge$=$(gov, dep, relation) in $E$}
+%   \Comment{Loop through all edges}
+%    \If{relation {\bf contains} ``$>$''} \Comment{Is it a composite relation?}
+%      \State {\sc UncollapseRelation}($G$, $edge$)
+%    \EndIf
+%  \EndFor
+%\EndFunction \\
+% \Function{UncollapseRelation}{$G=(V,E)$, $edge$} 
+% \Comment{$G$ is a dependency graph; $edge$ is an edge in $E$ with a composite relation.} \\
+% \State $r1, r2$ $\leftarrow$ {\sc Split}($edge.relation$, ``$>$'')
+% \State $copyNode$ $\leftarrow$ get entry for $edge.gov$ in $copyNodes$ {\bf or} make a copy of $edge.gov$ and store it in $copyNodes$ \\
+% 
+% \If {$(edge.gov, copyNode, r1)$ {\bf not in} $E$} \\ \Comment{Has $copyNode$ not been attached to its governor?}
+% \State $E \leftarrow E \cup \{(edge.gov, copyNode, r1)\}$ \Comment{Attach $copyNode$} 
+% \EndIf
+% \\
+% \State $E \leftarrow E \cup \{(copyNode, edge.dep, r2)\}$ \Comment{Attach $edge.dep$.} 
+% 
+% \State $E \leftarrow E - \{edge\}$ \Comment{Remove original composite edge.} 
+%
+% 
+% \EndFunction
+%
+%\end{algorithmic}
+%\caption{Procedure to obtain the enhanced representation with copy nodes from dependency trees annotated according to the {\sc composite} analysis.} \label{alg:enh-composite}
+%\end{algorithm}
+%
+
+The {\sc composite} analysis of gapping constructions provides information on which arguments are dependents of an elided predicate, as well as the type of argument. It has therefore been argued that one can deterministically obtain the enhanced representation from trees annotated with composite relations. For most sentences, this is indeed true and it is possible to obtain the enhanced representation using the following procedure. 
+
+\begin{enumerate}
+\item Go through each edge $e=(gov, dep, reln)$ of the dependency tree.
+\item If $reln$ is a composite relation, perform the following steps.
+\begin{enumerate}
+\item Split $reln$ into its two atomic parts $r_1$ and $r_2$.
+\item Remove the original edge $e$ from the dependency tree.
+\item If no copy of $gov$ exists, make a copy $gov'$ of $gov$ and attach $gov'$ to $gov$ with the relation $r_1$.
+\item Attach $dep$ to $gov'$ with the relation $r_2$. 
+\end{enumerate}
+\end{enumerate}
+
+For simplicity, I only outlined here the procedure to obtain the enhanced representation from dependency trees with relations that are composed of at most two atomic relations. However, as previously mentioned, composite relations that consist of more than two relations such as \texttt{conj>xcomp>xcomp>obj} are also possible. The described procedure can be easily turned into a recursive procedure that can also deal with these relations, which I did for my actual implementation.
+
+One complication of this procedure is that it cannot properly deal with multiple conjuncts with gapping. For a sentence such as ``\textit{Mary drinks tea, Sue coffee, and Paul orange juice}'', the enhanced dependency graph should contain two copy nodes of the predicate \textit{drinks}. However, as all the orphans are attached directly to the head of the first conjunct in the \textsc{composite} analysis, the dependency tree lacks a marking of conjunct boundaries and hence, it is impossible to determine the number of required copy nodes and which orphans should be attached to which of the copies if one only considers the tree structure. While it is conceivable to use heuristics (e.g., by looking for commas or coordinating conjunctions) to determine conjunct boundaries, this defeats the idea of using a dependency tree analysis that allows one to deterministically obtain the enhanced representation, and therefore I did not implement any such heuristics. 
+
+
+
+\subsection{Experiments}
+
+I conducted two experiments. First, I conducted an {\it oracle} experiment in which I evaluated how well one can reconstruct the enhanced dependency graph from gold dependency trees annotated according to the two different analyses using the procedures that I described in the previous sections. This experiment was intended to answer the question which of the two procedures works better if we assume that we have a parser that can perfectly parse to either of the two representations.
+
+Second, I evaluated how well one can reconstruct the enhanced dependency graphs from dependency trees that were output by a parser. This {\it in-vivo} experiment was intended to answer the question which of the two analyses leads to better enhanced graphs in a realistic end-to-end setting. For this experiment, I used the output of the graph-based parser trained on the {\sc combined} training set.
+
+\subsubsection{Evaluation}
+
+I evaluated the output of the two procedures on the {\sc combined} development and test sets. Considering that the outputs are graphs rather than trees, I used the labeled and unlabeled precision and recall metrics, which are generally used to evaluate dependency graphs (e.g., \cite{Oepen2015}).
+However, considering that my procedures only change edges that are involved in gapping constructions and considering that these edges only make up a very small fraction of all the edges in the treebank, I computed these metrics only on edges that are involved in gapping constructions, i.e., only incoming and outgoing edges of copy nodes. I further excluded edges going to punctuation and coordinating conjunctions as they are less relevant for most practical tasks and including these edges could potentially lead to inflated scores. Unlabeled precision (UP) and recall (UR) are defined as follows.
+$$UP = \frac{\mbox{number of edges with correct governor and dependent}}{\mbox{number of edges in predicted graph}} \times 100 $$
+$$UR = \frac{\mbox{number of edges with correct governor and dependent}}{\mbox{number of edges in gold graph}} \times 100$$
+The labeled variants of these two metrics are the same with the exception that an edge is only counted as correct if its governor, dependent, and label are correct.
+
+\subsection{Results and Discussion}
+
+\begin{table}
+\footnotesize
+\begin{tabularx}{\textwidth}{r  l   c c c c  @{\hskip 0.3in}  c c c c    }
+&	&				 	\multicolumn{4}{c}{\small \textsc development}	&		\multicolumn{4}{c}{\small \textsc test}			\\
+&	&					LP& LR &	UP &UR & LP& LR &	UP &UR 			\\ \midrule
+Gold & \textsc{orphan} 	&	{\bf 87.65}	&{\bf 88.20}	&{\bf 93.21}	& {\bf 93.79}   & 	83.77	&  85.06	&90.57	& {\bf 93.51}	\\
+graphs & \textsc{comp.}		&	86.54	&83.85	&86.54	&83.85&  	{\bf 91.72}	& {\bf 93.51}	&{\bf 91.72}	&{\bf 93.51}	\\ \midrule
+Pred. &	\textsc{orphan} 	&	{\bf 85.48}	&32.92	& {\bf 88.71}	&34.16&	{\bf 86.44}	& {\bf 33.12}	& {\bf 88.14}	&33.77	\\
+graphs &	\textsc{comp.}	&	60.64	& {\bf 35.40}	&64.89	& {\bf 37.89}&	69.01	&31.82	&74.65	& {\bf 34.42}	\\
+\end{tabularx}
+\caption{Labeled precision (LP) and recall (LR) and unlabeled precision (UP) and recall (UR)  of the two enhancement procedures on the {\bf gapping constructions} in the  {\sc combined} development and test sets. The top two rows show the results for enhancing gold dependency trees; the bottom two rows show the results for enhancing predicted dependency trees.}  \label{tbl:results-enhanced}
+\end{table}
+
+Table~\ref{tbl:results-enhanced} shows the results for the two experiments on the \textsc{combined} development and test sets.
+
+
+\paragraph{Oracle experiment}
+The top two rows of Table~\ref{tbl:results-enhanced} show the results for the oracle experiment. Considering that there are only around 40 sentences with around 200 edges that are part of gapping constructions in each of the two data sets, the differences between the two methods are quite small.  Still, on the test set, the procedure that reconstructs the enhanced graph from trees with the {\sc composite} relations performed significantly better ($p<0.05$) in terms of the labeled metrics than the other procedure, but there was no significant difference between the performance of the two procedures in terms of the unlabeled precision and recall.  Note that, as expected, the labeled and unlabeled scores are identical for the \textsc{composite} procedure. This procedure only has to determine which nodes to copy and where orphaned arguments should be attached but as the correct label is included in the {\sc basic} representation, this procedure always assigns the correct label if the composite label is correct.
+
+Not surprisingly, these two procedures struggle with different constructions. As mentioned before, the {\sc composite} procedure cannot properly reconstruct enhanced graphs of sentences with multiple gapped conjuncts and these sentences are responsible for almost all of the remaining errors. Further, there is the very rare case in which the main predicate has multiple modifiers with the same relation, e.g., multiple adverbial clause modifiers. If this is the case, a composite relation such as {\tt conj$>$advcl$>$obj} does not uniquely identify the argument in the full conjunct and one might end up copying the wrong predicate.
+
+The main source of error for the {\sc orphan} procedure is sentences in which the gapped conjunct contains arguments or modifiers without a correspondent in the the full conjunct. For example, in the sentence ``{\it They left the company, many for good.}'', the oblique modifier {\it for good} does not have a correspondent, and therefore, it cannot be aligned to any argument in the first conjunct. In such cases, the  {\sc orphan} procedure cannot determine the correct label and assigns the most general {\tt dep} label. Lastly, in some cases, the {\sc orphan} procedure also copies nodes for other types of ellipsis. For example, the enhanced graph of the sentence ``{\it Delivery of the first aircraft is set for early November and a second for December}'' as output by the {\sc orphan} procedure contains copy nodes of the main predicate {\it set} as well as the elided head noun {\it delivery}. However, according to the UD guidelines, which are reasonably designed to keep the number of copy nodes to a minimum, the elided head noun should not be copied, so this is marked as incorrect despite actually being potentially useful for downstream applications.
+
+
+Overall, these numbers suggest that both procedures can reconstruct the enhanced graphs from perfectly annotated trees with high accuracy. While this was expected for the {\sc composite} procedure, this is more surprising for the {\sc orphan} procedure which not only has to reconstruct the structure but also the labels and still performs almost on par with the {\sc composite} procedure.
+
+
+\paragraph{In-vivo experiments}
+The purpose of the in-vivo experiment was to evaluate which one of the two procedures works better in practice. As my parsing experiments showed, even state-of-the-art parsers still make many mistakes in parsing gapping constructions, independent of which representation was used. This fact is also reflected in the numbers in the bottom two rows of Table~\ref{tbl:results-enhanced}, which are much lower than the oracle numbers.  Recall is very low for both procedures as both of them rely on the parser to detect gapping constructions. If the parser successfully detected a gapping construction, the {\sc orphan} procedure seems to be better at reconstructing the enhanced graph and assigning the labels, which is reflected in the higher labeled and unlabeled precision values. While none of these differences were significant, this still suggests that the parser that was trained to parse to the {\sc composite} analysis struggles with assigning the correct composite label, which then translates to lower precision of the {\sc composite} procedure.
+
+The numbers in Table~\ref{tbl:results-enhanced} suggest that overall, parsing to the {\sc orphan} analysis and then reconstructing the enhanced graphs from this representation works at least as well (no statistically significant differences in terms of any of the four metrics) as first parsing to the {\sc composite} analysis. However, with both procedures, recall is still very low and both of them still miss almost two thirds of the edges involved in gapping in the two test sets.
+
+\section{Conclusion}
+
+In this paper, I discussed two different analyses of gapping constructions within the Universal Dependencies framework. I primarily evaluated the two analyses along three dimensions, namely theoretical considerations, their parseability, and how easy they make it to reconstruct the enhanced representation. I argued that from a theoretical point of view, the {\sc orphan} analysis is preferable as it respects clause boundaries and leads to more theory-internal consistency. The results of the parsing and enhancement experiments suggest that the {\sc orphan} analysis is easier to parse and is on par with the {\sc composite} analysis in terms of reconstruction of the enhanced graphs. These three results, in combination with the arguably easier annotation, make the {\sc orphan} analysis the preferred annotation according to the Universal Dependencies design goals.
+
+From a more practical point of view, my parsing experiments have shown that while the new generation of parsers that was developed over the past two years is much better at parsing gapping constructions, we are still quite far away from reliably parsing these constructions. At the same time, as I demonstrated in my enhancement experiments, it is possible to reconstruct the enhanced dependency graphs from correct dependency trees with very high accuracy, so as parsers become more and more accurate, we can also expect to get closer to reliably parsing sentences with gapping to a representation that is useful for downstream tasks. 
+
+%Some great last sentence 
+
+
+
+\printbibliography
+%\bibliography{qp-references}
+
+
+%=====================================================================
+
+%\begin{addresses}
+ % \begin{address}
+%    Author1 \\
+%    Street \\
+%    \ldots \\
+%    \email{author1@email}
+%  \end{address}
+%  \begin{address}
+ %   Author2 \\
+ %   Street \\
+ %   \ldots \\
+ %   \email{author2@email}
+ % \end{address}
+ % ...
+%\end{addresses}
+
+%=====================================================================
+
+\end{document}
