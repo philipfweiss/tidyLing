@@ -1,0 +1,59 @@
+\documentclass [11pt] {article}
+	
+	\usepackage	[margin=0.7in]{geometry}
+	\usepackage {gb4e}
+	\usepackage {natbib}
+	\usepackage {enumerate}
+
+\thispagestyle{empty}
+\setcitestyle{aysep={}}
+
+\begin {document}
+
+\begin {center}
+{\large Anti-singleton Indefinites in Persian}
+\end {center}
+
+Modern colloquial Persian has two ways of marking indefinite NPs: 1. the indefinite determiner ``ye" and 2. the indefinite clitic ``-i" \citep{ghomeshi2003plural, toosarvandani2014quantification}. The behavior of the determiner ``ye" mirrors that of its English counterpart ``a(n)" (\ref{ye}), while the clitic ``-i" has a similar distribution to ``any": it is mostly licensed under nonveridical operators and it is unacceptable by itself in veridical contexts (\ref{i}). However, unlike ``any", ``-i" can cooccur with determiners such as the indefinite determiner ``ye" (\ref{yei}) or the universal determiner ``har" (\ref{har}). The appearance of ``-i" is often associated with \textsc{domain widening}, speaker's \textsc{ignorance} (\ref{yei}), or \textsc{free choice} (\ref{har}) implications. I argue that while ``ye" is a run-of-the-mill indefinite determiner contributing an existential quantifier, ``-i" imposes an anti-singleton constraint on its NP argument \citep{alonso2008minimal, alonso2010modal}. I show that some implications associated with ``-i" arise pragmatically due to the interaction of the anti-singleton constraint introduced by ``-i" and the available salient quantification domains in the context.
+
+	\begin {exe}
+		\ex \begin {xlist}
+		\ex \label {ye}
+		\gll	\textbf{ye}	ket\={a}b	ru	miz	e \\
+				{\scriptsize Indef.D}	book	on	table	be.{\scriptsize Pres.3.SG}\\
+		\glt 	``A book is on the table."
+		\ex \label {i}
+		\gll	* 	ket\={a}b	-\fbox{i}	ru	miz	e \\
+				{} 	book	{\scriptsize Indef.CLC}	on	table	be.{\scriptsize Pres.3.SG}\\
+		\ex \label {yei}
+		\gll	\textbf{ye}	ket\={a}b	-\fbox{i}	ru	miz	e \\
+				{\scriptsize Indef.D}	book	{\scriptsize Indef.CLC}	on	table	be.{\scriptsize Pres.3.SG}\\
+		\glt 	``A book is on the table."
+		\ex \label {har}
+		\gll	\textbf{har}	ket\={a}b	-\fbox{i}	(be-x\={a}-y)	ru	miz	e \\
+				each/every	book	{\scriptsize Indef.CLC}	{\scriptsize Sub}-want-{\scriptsize Pres.2.SG}	on	table	be.{\scriptsize Pres.3.SG}\\
+		\glt 	``Any book (you want) is on the table."
+		\end {xlist}
+	\end {exe}
+
+In (\ref{barack}) below when the indefinite clitic ``-i" is absent, the sentence has two readings: 1. ``There is only one Barack Obama and he is the President of the US". 2. ``There is more than one Barack Obama; one of them is the President of the US". Adding the indefinite clitic ``-i" rules out reading 1. Therefore, when ``-i" is present, (\ref{barack}) cannot be continued with ``and there is only one Barack Obama" . This example, among others, shows that NPs marked with the indefinite clitic ``-i" are incompatible with singleton indefinite readings \citep{schwarzschild2002singleton}.
+
+	\begin {exe}
+		\ex \label {barack}
+		\gll	\textbf{ye}	B\={a}r\={a}ck Ob\={a}m\={a}	(-i)	hast	ke		rais-jomhur	e \={A}mrik\={a} -s\\
+			{\scriptsize Indef.D} Barack Obama	({\scriptsize Indef.CLC})	is		that	president	{\scriptsize Ezafe} America is\\
+				``There is a Barack Obama who is the president of the US"
+	\end {exe}
+
+%%% Your analysis of "-i"
+Following \cite{alonso2008minimal, alonso2010modal}'s analysis of ``algun" in Spanish, I propose that the Persian indefinite clitic ``-i" introduces an anti-singleton subset selection function. I suggest that ``-i" is also compatible with NPs that denote empty sets. I show that when both ``ye-\textsc{np}" and ``ye-\textsc{np}-i" are possible utterances and the context provides a salient non-singleton quantification domain $D$, the choice of the more complex ``ye-\textsc{np}-i" construction generates an ignorance or indifference implicature. Such ignorance/indifference implicatures are cancelable. More generally, given ``\textsc{d}-\textsc{np}" and ``\textsc{d}-\textsc{np}-i" as possible constructions if the context provides two salient non-singleton domains $D$ and $D'$ such that $D\subset D'$, the choice of the more complex clitic marked construction implies quantification over the wider domain $D'$. Such domain widening implicatures are also cancelable. Finally, in order to derive a free choice interpretation, ``\textsc{np}-i" construction needs to be modified by the universal quantifier ``har".
+
+
+\indent {\footnotesize Word Count: }
+\newpage
+\thispagestyle{empty}
+
+\bibliographystyle{authordate1}
+\bibliography{/Users/masoudjasbi/Documents/library/Bibliography.bib}
+
+\end {document}

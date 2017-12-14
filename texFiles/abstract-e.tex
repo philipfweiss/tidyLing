@@ -1,0 +1,104 @@
+\documentclass [11pt] {article}
+
+% \usepackage{multicols}
+	\usepackage{times}
+	\usepackage{subfig}
+	\usepackage{color}
+	\usepackage{helvet}
+	\usepackage[margin=1in]{geometry}
+	\usepackage {gb4e}
+	\usepackage {natbib}
+	\usepackage {enumerate}
+	\usepackage {MnSymbol}
+	\usepackage{stmaryrd}
+	\thispagestyle{empty}
+	\setcitestyle{aysep={}}
+	\definecolor{darkgreen}{rgb}{0,0.4,0}
+	\setlength{\intextsep}{12pt plus 1.0pt minus 2.0pt}
+	\captionsetup{belowskip=-20pt,aboveskip=-5pt}
+	\usepackage{nopageno}
+
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+
+\begin {document}
+
+\begin {center}
+{\large \textbf{Uniqueness in Definites and Indefinites: Evidence from Persian}}
+\end {center}
+
+\textbf{Overview} ~~The classical theory of definite descriptions posits that definites and indefinites - marked by \emph{the} and \emph{a} in English - differ in two ways: 1. definites imply existence and uniqueness of the NP's descriptive content while indefinites \textit{only} imply existence. 2. The existence and uniqueness implications of definites are \textit{presupposed} while the existence implication of indefinites is not necessarily so. We show that in Persian, both definites and indefinites can carry a uniqueness implication, marked overtly by the the nominal suffix \emph{-e}. Marking an indefinite with \emph{-e} results in a singleton indefinite which is scopally inert and its uniqueness implication is not targeted by entailment canceling operators. We propose that \emph{-e} triggers a projective uniqueness implication. On definites, this implication is also rendered presuppositional, while on indefinites, it is passed up the compositional tree similar to a conventional implicature. Therefore, in Persian, the main difference between definites and indefinites is in the presuppositional nature of definites and not whether they carry a uniqueness implication.
+
+\textbf{Empirical Observations} ~~Modern colloquial Persian is among a small number of world languages that mark indefinites but have no overt definite article. Bare nominals can be interpreted as generic, existential, or definite (Toosarvandani \& Nasser 2015). While prosody and context are often helpful cues for disambiguation, here we focus on the nominal suffix \emph{-e} (glossed as Uniqueness Marker) which only allows a definite reading if it appears on the bare nominal. The sentence in (\ref{bache}) without \emph{-e} is ambiguous between the three readings shown, but the appearance of \emph{-e} picks the definite reading: it implies that there is a unique child in the utterance context. We also show that the uniqueness implication of the ``\textsc{N}\emph{-e}'' construction is projective and presuppositional. In all examples below, ({\color {blue}-e}) shows that the presence of the uniqueness marker is optional and {\color {blue}-e} $\filledtriangleright$ to the left of an interpretation indicates that the presence of \emph{-e} renders that interpretation, the only available one.
+
+	\begin {exe}
+		\ex \label{bache} \gll	bache({\color {blue}-e})	gerye	mi-kon-e\\
+			child({\scriptsize -UM})	cry	{\scriptsize MI-}do{\scriptsize -3.SG}\\
+			\begin {tabular} {l l}
+			& ``Children cry.'' (Generic)\\
+			& ``Some child is crying.'' (Existential)\\
+			{\color {blue}-e} $\filledtriangleright$ & ``The child is crying.'' (Definite)\\
+			\end {tabular}
+	\end {exe}
+
+Based on examples like (\ref{bache}), Ghomeshi (2003) proposed that \emph{-e} is a definiteness marker. However, we present examples like (\ref{indefe}) that show this suffix can appear on nominals modified by the indefinite determiner \emph{ye} as well. In such examples, the presence of \emph{-e} results in a specific indefinite reading.
+
+	\begin {exe}
+		\ex \label{indefe} \gll	{\color {red} ye}	bache({\color {blue}-e})	gerye	mi-kon-e\\
+			{\scriptsize Indef.D}	child({\scriptsize -UM})	cry	{\scriptsize MI-}do{\scriptsize -3.SG}\\
+			\begin {tabular} {l l}
+			& ``A child is crying.''\\
+			{\color {blue}-e} $\filledtriangleright$ & ``A certain child is crying.''\\
+			\end {tabular}
+	\end {exe}
+
+Following Farkas (1994) we investigate three types of specificity: epistemic, partitive, and scopal. We argue that the first two do not describe the effects of \emph{-e} satisfactorily. However, we show that indefinites marked by \emph{-e} are scopally specific and do not allow intermediate scope. The sentence in (\ref{intermed}) is ambiguous between a wide scope and an intermediate scope existential when \emph{-e} is absent but in the presence of this suffix, only the wide scope reading is available.
+
+	\begin {exe}
+		\ex \label {intermed} \gll	har	doxtar-i	hame-ye		eshteb\={a}-h\={a}-ye	ye-pesar({\color {blue}-e})	ro		tasih	kard-\o\\
+			every	girl-{\scriptsize Indef.C} 	all-{\scriptsize EZAFE}		mistake-{\scriptsize PL}-{\scriptsize EZAFE}	{\scriptsize Indef.D}-boy({\scriptsize-UM})	{\scriptsize OM}	correct	do{\scriptsize -3.SG}\\
+			\begin {tabular} {l l}
+			& ``For every girl, a boy corrected all his mistakes.'' ($\forall > \exists > \forall$)\\
+			{\color {blue}-e} $\filledtriangleright$ & ``There is a boy that every girl corrected all his mistakes.'' ($\exists > \forall > \forall$)\\
+			\end {tabular}
+	\end {exe}
+
+Similar results are obtained with respect to the de-re/de-dicto ambiguity. The sentence in (\ref{deredicto}) without the suffix \emph{-e} is ambiguous between a de-re and a de-dicto reading but when \emph{-e} is present on \emph{pesar} ``boy'', only the de-re reading survives.
+
+	\begin {exe}
+		\ex \label{deredicto} \gll	S\={a}r\={a}	mi-x\={a}-d	b\={a}	ye-pesar({\color {blue}-e})		ezdev\={a}j	kon-e\\
+				Sara	{\scriptsize MI-}want{\scriptsize -3.SG} 	with		{\scriptsize Indef.D}-boy({\scriptsize -UM})	marriage	do{\scriptsize -3.SG}\\
+			\begin {tabular} {l l}
+			& ``Sara wants to marry some boy (or another).'' ($\Box > \exists $)\\
+			{\color {blue}-e} $\filledtriangleright$ & ``There is a boy Sara wants to marry.'' ($\exists > \Box $)\\
+			\end {tabular}
+	\end {exe}
+
+Indefinites marked by \emph{-e} also take wide scope with respect to temporal adverbials like \emph{hamishe} ``always'' as in (\ref{temp}).
+
+	\begin {exe}
+		\ex \label {temp} \gll	S\={a}r\={a}	hamishe		b\={a}	ye-pesar({\color {blue}-e})		dav\={a}-sh	mi-sh-e\\
+				Sara	always 	with		{\scriptsize Indef.D}-boy({\scriptsize -UM})	quarrel{\scriptsize -3.SG}	{\scriptsize MI-}become{\scriptsize -3.SG}\\
+			\begin {tabular} {l l}
+			& ``Sara always gets into a fight with some boy (or another).'' ($\textsc{always} > \exists $)\\
+			{\color {blue}-e} $\filledtriangleright$ & ``Sara always gets into a fight with a certain boy.'' ($\exists > \textsc{always}$)\\
+			\end {tabular}
+	\end {exe}
+
+Finally, we show that this seemingly wide scope behavior of \emph{e}-marked indefinites is not targeted by entailment canceling operators such as negation, possibility modals, or conditional antecedents. However, unlike \emph{e}-marked definites, \emph{e}-marked indefinites are not presuppositional and can be uttered informatively and out of the blue.
+
+\textbf{Analysis} ~~We assume that common nouns are of type $\langle e,t\rangle$ and since Persian has no overt definite article, definiteness is achieved by covert type-shifting of bare nominals via Partee 1986's \emph{iota} operator when the conversational context supports uniqueness and presuppositionality of the nominal. We propose that the nominal suffix \emph{-e} is an identity function of type $\langle et,et\rangle$ which introduces a uniqueness implication ($| \llbracket \textsc{n} \rrbracket | = 1$) on the nominal it modifies. This implication is projective and passed up the compositional tree in a separate dimension similar to Potts (2007)'s treatment of conventional implicatures. 
+
+This proposal accounts for the effect of the suffix in both definite and indefinite constructions. In definite examples like (\ref{bache}), the uniqueness implication introduced by the suffix \emph{-e} together with the absence of an indefinite determiner provide sufficient evidence for applying \emph{iota} and deriving a definite interpretation. In examples like (\ref {indefe}) where the indefinite determiner  \emph{ye} is present, the suffix \emph{-e}'s uniqueness implication limits the domain of the existential quantifier such that a singleton indefinite is derived (Schwarzschild 2002). Since the uniqueness implication is passed up in a separate dimension and interpreted globally, scope relations with other operators such as the universal quantifier, modals, or temporal adverbials in the sentence are made inert; there can be no variation for the nominal value with respect to these operators since the nominal extension is set to be a singleton globally. We argue that this gives rise to an appearance of wide scope for such indefinites (e.g. \ref{deredicto}-\ref{temp}) and explains the absence of intermediate scope in (\ref {intermed}). Finally, since the uniqueness implication is passed up in a separate dimension, it cannot be targeted by entailment canceling operators and we derive the interpretations observed in such environments. 
+
+\textbf{Summary} ~~The data on the uniqueness marker in Persian suggest that both definites and indefinites can carry uniqueness implications. The fundamental difference between them is that the implications of definites (but not necessarily indefinites) are presuppositional. In this paper we bring data that sheds light on the cross-linguistic nature of definiteness and provide a compositional account of the Persian uniqueness marker.
+
+\textbf{References} ~~{\scriptsize \textbf{Farkas, Donka F. 1994}. \textit{Specificity and scope.} In: L. Nash and G. Tsoulas (eds), Langues et Grammaires 1, 119-137. \textbf{Ghomeshi, Jila. 2003.} \textit{Plural marking, indefiniteness, and the noun phrase.} Studia Linguistica, 57(2), 47-74. \textbf{Partee, Barbara. 1986.} \textit{Noun phrase interpretation and type-shifting principles.} Pages 115-143 of: J.Groenendijk, D.de Jongh, M.Stokhof (ed), Studies in discourse representation theory and the theory of generalized quantifiers. Dordrecht: Foris. \textbf{Potts, Christopher. 2007.} \textit{Conventional implicatures, a distinguished class of meanings.} Pages 475-501 of: Ramchand, Gillian, \& Reiss, Charles (eds), The Oxford Handbook of Linguistic Interfaces. Oxford University Press. \textbf{Schwarzschild, Roger. 2002.} \textit{Singleton indefinites. Journal of Semantics,} 19(3), 289-314. \textbf{Toosarvandani, Maziar, \& Nasser, Hayedeh. 2015.} \textit{Quantification in Persian.} In: Keenan, Edward L., \& Paperno, Denis (eds), Handbook of quantifiers in natural language, 2nd edn. Springer. }
+
+%{\scriptsize
+%\bibliographystyle{authordate1}
+%\bibliography{/Users/Masoud/Google/Academia/Bibliography}}
+
+\end {document}
