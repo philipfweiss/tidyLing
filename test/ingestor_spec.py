@@ -28,7 +28,9 @@ class IngestorTest(unittest.TestCase):
         for f in filepaths:
             results = ingestor.ingest(f)
             filename = os.path.basename(f)
-            self.assertEqual(len(results) == EXAMPLE_COUNTS[filename])
+
+            self.assertTrue(filename in EXAMPLE_COUNTS)
+            self.assertEqual(len(results), EXAMPLE_COUNTS[filename])
         
 
 # Should ingest all of the files in fixtures

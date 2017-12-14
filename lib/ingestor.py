@@ -1,6 +1,6 @@
 import os
-from parsers.base import *
-from parsers.tex import *
+from .parsers.base import *
+from .parsers.tex import *
 
 class Ingestor:
     def __init__(self):
@@ -24,11 +24,6 @@ class Ingestor:
         return parser.parse(file)
 
 
-
-
-
-ing = Ingestor()
-ing.ingest("foo.tex")
 
 
     

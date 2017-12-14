@@ -3,5 +3,5 @@ import TexSoup
 
 class TexParser(BaseParser):
     def parse_tex(self):
-        pass
+        return [1,2,3]
 
