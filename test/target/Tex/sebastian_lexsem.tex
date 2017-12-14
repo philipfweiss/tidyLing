@@ -1,0 +1,566 @@
+\documentclass[letterpaper,parskip=half]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{scrpage2}
+\usepackage{ifthen}
+\usepackage[ruled,lined]{algorithm2e}
+\usepackage[fleqn]{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{units}
+\usepackage{enumerate}
+\usepackage{multirow}
+\usepackage{ dsfont }
+\usepackage{MnSymbol}
+\usepackage{wasysym}
+\usepackage{stmaryrd}
+\usepackage{qtree}
+\usepackage[procnames]{listings}
+\usepackage{color}
+\usepackage{gb4e}
+\usepackage{qtree}
+\usepackage{tree-dvips}
+\usepackage{avm}
+
+\usepackage[comma,authoryear,numbers]{ natbib }
+
+
+
+
+\ihead{Sebastian Schuster\\sebschu@stanford.edu }
+\ohead{LINGUIST 222A\\ Foundations of Syntactic Theory I}
+
+\newcounter{exercise}
+\setcounter{exercise}{1}
+
+\newenvironment{exercise}[1]{\large \textsf{\textbf{Task \arabic{exercise}}} \ifthenelse{#1>0}{(#1 points)}{} \\ \normalsize \addtocounter{exercise}{1}}{\vspace{2ex}}
+
+\newenvironment{solution}{\large \textsf{\textbf{Solution:}} \\ \normalsize}{\vspace{2ex}}
+
+\newtheorem{claim}{Theorem}
+\newcommand{\sem}[1]{\ensuremath{\llbracket\mbox{#1}\rrbracket}}
+
+\newcommand{\T}{\textbf{T}}
+\newcommand{\F}{\textbf{F}}
+\newcommand{\st}[1]{\ensuremath{\{#1\}}}
+\newcommand{\pr}[1]{\ensuremath{\langle#1\rangle}}
+
+
+
+\begin{document}
+\thispagestyle{scrheadings}
+\definecolor{keywords}{RGB}{255,0,90}
+\definecolor{comments}{RGB}{0,0,113}
+\definecolor{red}{RGB}{160,0,0}
+\definecolor{green}{RGB}{0,150,0}
+ 
+\lstset{language=Python, 
+        basicstyle=\ttfamily\small, 
+        keywordstyle=\color{keywords},
+        commentstyle=\color{comments},
+        stringstyle=\color{red},
+        showstringspaces=false,
+        identifierstyle=\color{green},
+        procnamekeys={def,class},
+        breaklines=true,
+        numbers=left,
+        breakatwhitespace=false}
+~
+
+\vspace{-2ex}
+
+\begin{center}
+\huge \textsf{\textbf{Participle Fronting in German}}
+
+%\normalsize{12/02/2015}
+
+\end{center}
+
+\vspace{1ex}
+
+%TODO: Introduction, talk more about various discourse contexts, explain analysis of (1a) in prose, maybe work a bit on last section and conclusion.
+
+
+\section{Introduction}
+
+Strong and Meyer already noted in 1886 that ``[German] possesses the great advantage over the Romance languages -- and indeed over the English -- that it has the power of placing any word which it wishes to emphasise, at the beginning of the sentence'' \citep[p.32]{strong1886outlines} and in fact we
+can find many different constituent types in sentence-initial position as illustrated in (\ref{munich}-\ref{spoken}). (\ref{munich}a) and (\ref{munich}d) 
+have an agentive DP at the beginning of the sentence, (\ref{munich}b) has a DP bearing the patient-role in sentence-initial position, and (\ref{munich}c) has a PP at the beginning of the sentence. Further, even entire VPs can be fronted as illustrated in (\ref{spoken}).
+
+\begin{exe}
+\ex \label{munich} \begin{xlist}
+\ex \gll [ Ich ]_{DP_{AGT}} habe dieses Auto in München gestohlen. \\
+{} I {}  have this car in Munich stolen \\
+`I stole this car in Munich.'
+\ex \gll [ Dieses Auto ]_{DP_{PAT}} habe ich in München gestohlen. \\
+ {} This car {} I have in Munich stolen \\
+`I stole this car in Munich.'
+\ex \gll [ In München ]_{PP} habe ich dieses Auto gestohlen. \\
+{} In Munich {} have I this car stolen \\
+`I stole this car in Munich.'
+\ex{  \gll  [ Ich ]_{DP_{AGT}}  habe in München dieses Auto gestohlen. \\
+{} I {}  have in Munich this car stolen \\
+`I stole this car in Munich.'}
+\end{xlist}
+
+\ex \label{spoken} \gll [ Mit ihm gesprochen ]_{VP} hat sie nie~wieder. \\
+{} With him spoken {} has she never-again \\
+`She never spoke to him again.'
+\end{exe}
+
+Apart from the flexibility regarding the sentence-initial constituent, the constituent order within the middle field, i.e., the sequence between the finite and non-finite verbs, is also highly unconstrained as illustrated in the contrast between (\ref{munich}a) and (\ref{munich}d). In (\ref{munich}a), the patient DP \textit{dieses Auto} moved to a higher position in the tree such that it is pronounced before the adjunctive PP \textit{in München}. This movement is 
+typically considered to be triggered by a \textit{scrambling} operation \citep{ross1967constraints} that allows for the reordering of constituents within
+the middle field.
+
+Sentences such as (\ref{munich}a) are typically analyzed as following.
+
+
+% briefly talk about analysis
+
+\begin{exe}
+\ex
+\tiny 
+\Tree 
+[ .CP {{\ }\node{speccp}{ \ }} 
+  [ .C' \node{c}C 
+    [ .TP {\ }\node{spectp2}{ \ }\node{spectp}{\ } 
+      [ .T' {\ }\node{t2}T\node{t1}{\ } 
+        [ .VP_{AUX}
+          {\ }\node{specvp}{ \ } 
+          [ .V_{AUX}' 
+            [ .VP 
+              \qroof{in Munich}.PP
+              [ .VP
+                 \qroof{\node{subj}I}.DP
+                 [ .V' 
+                   \qroof{thi\node{obj}s car}.DP
+                   [ .V stolen ]
+                   ] ] ]
+            [ .V_{AUX} ha\node{aux}ve ] ] ]              
+        ] ] ] ]  
+        \abarnodeconnect[-80pt]{aux}{t1}
+        \abarnodeconnect[-4pt]{t2}{c}
+        \abarnodeconnect[-4pt]{obj}{specvp}
+        \abarnodeconnect[-4pt]{subj}{spectp}
+        \abarnodeconnect[-4pt]{spectp2}{speccp}
+
+\end{exe}
+
+\normalsize
+
+\ \\
+\ \\
+
+The finite auxiliary moves first to T and then to C. The agent of the main verb is base-generated in the \textsc{d}-structure and first moves to Spec,TP and then to Spec,CP. Further, the scrambling operation triggers the movement of the patient-DP, \textit{this car}, to a higher position in the tree. 
+
+In case a constituent other than the agentive DP is fronted as it is the case in (\ref{munich}b-c), the fronted constituent moves to Spec,CP and therefore blocking the agentive DP to move from Spec,TP to Spec,CP.
+
+Apart from the movement of constituents to Spec,CP German also allows for the fronting of participles in some  discourse contexts.
+
+\begin{exe}
+\ex \label{gelesen} \gll  \textbf{Gelesen} hat Hans das Buch nicht. \\
+Read has Hans the book not\\
+`Hans didn't read the book.'\\
+\citep{denbesten1990stranding}
+
+\end{exe}
+
+This movement is only licensed in very specific discourse contexts and it seems to be very hard to exactly define 
+which contexts allow for such a movement. Most of the time, however, it seems that these constructions are used to reinforce or contradict implicatures from the preceding discourse.
+
+\begin{exe}
+\ex \label{parfum1} \gll ``Rose des Südens'' hatte er von seinem Vater geerbt [...]. Die übrigen seiner Parfums waren altbekannte Gemische.  \textbf{Erfunden} hatte er noch~nie etwas. \\
+Rose of-the south has he from his father inherited [...]. The remaining of-his perfumes were long-known mixtures. Invented has he never-before something.  \\
+`He inherited ``Rose of the South'' from his father [...]. All his other perfumes were long-known mixtures. He had never invented anything.' \\
+(Patrick Süskind, \textit{Das Parfum})
+\ex \label{sommer1} \gll {[...]} er ist sehr intelligent. Aber \textbf{studiert} hat er nicht, er wollte lieber arbeiten. \\
+ {} he is very intelligent. But studied has he not, he wanted rather work \\
+`[...] he is very intelligent. But he didn't go to college, he rather wanted to work.'\\
+(Hans Magnus Enzenberger, \textit{Der kurze Sommer der Anarchie})
+\end{exe}
+
+In (\ref{parfum1}) the last sentence with the fronted participle reinforces the implicature that whoever \textit{he} refers to never invented a perfume on his own and in (\ref{sommer1}) the second sentence defeats the possible implicature that someone who is very smart also went to college.
+
+The construction can also be used when the participle is contrastively focused or when it is new information focused. For example, the participle in (\ref{versucht}) is contrastively focused expressing that they tried to do something but did not succeed.
+
+\begin{exe}
+\ex \label{versucht} \gll \textsc{{Versucht}} haben sie es beide. \\
+Tried have they it both. \\
+`They both tried it'. \\
+(Jurek Becker, \textit{Jakob der Lügner})
+\end{exe}
+
+\section{Solutions}
+
+At least initially, analyzing sentences with a fronted participle seems to be challenging as it appears that a head is moving to a specifier position. In this
+section, I present two possible analyses of sentences with fronted participles.
+
+\subsection{VP-remnant movement}
+
+The first analysis of participle fronting in German was proposed by \citet{webelhuth1987remnant}. According to their analysis, the specifier and the complement of the participle evacuate the VP and then this VP-remnant moves up to Spec,CP. For example, a sentence such as (\ref{gelesen}) can be analyzed as following. 
+
+\begin{exe}
+\ex
+\tiny 
+\Tree 
+[ .CP {{\ }\node{speccp}{ \ }} 
+  [ .C' \node{c}C 
+    [ .TP {\ }\node{spectp2}{ \ }\node{spectp}{\ } 
+      [ .T' {\ }\node{t2}T\node{t1}{\ } 
+        [ .VP_{AUX}
+          {\ }\node{specvp}{ \ } 
+          [ .V_{AUX}' 
+            [ .NegP
+              [ .NegP' 
+                [ .Neg not ]
+                [ .\node{vp}VP
+                   \qroof{Ha\node{subj}ns}.DP
+                   [ .V' 
+                     \qroof{the\node{obj}\ book}.DP
+                     [ .V read ]
+                     ] ] ] ]
+            [ .V_{AUX} ha\node{aux}ve ] ] ]              
+        ] ] ] ] 
+        \abarnodeconnect[-82pt]{aux}{t1}
+        \abarnodeconnect[-4pt]{t2}{c}
+        \abarnodeconnect[-4pt]{obj}{specvp}
+        \abarnodeconnect[-4pt]{subj}{spectp}
+        %\abarnodeconnect[-4pt]{spectp2}{speccp}
+        \abarnodeconnect[-42pt]{vp}{speccp}
+\end{exe}
+
+\normalsize
+
+In this analysis, the subject-DP \textit{Hans} moves up to Spec,TP in order to fulfill the EPP requirement and the 
+direct object, \textit{the book}, moves up to Spec,AuxP as a result of the scrambling operation. This leaves a VP-remnant behind which can move to Spec,CP leading to the fronted participle. My analysis of the negation in this sentence follows the analysis by \citet{webelhuth1990diagnostics} and \citet{jager2008history}.
+
+The main idea behind the analysis of participle fronting by \citet{webelhuth1987remnant} is that this process is linked to a scrambling operation \citep{ross1967constraints} which allows parts of the VP to move to a higher position within the middle field and which also explains the free constituent order within the middle field. They assume that participle fronting is possible whenever an embedded clause in which the complement of the participle scrambles out of the VP is grammatical. For example, the corresponding embedded clause to sentence (\ref{gelesen}) is the CP in (\ref{gelesen-embedded}).
+
+\begin{exe}
+\ex \label{gelesen-embedded} \gll weil Hans [ das Buch ]_i [ nicht [ $t_i$ gelesen ]_{VP} ]_{NegP} hat \\
+because Hans {} the book {} {} not {} {} read {} {} has \\
+`because Hans didn't read the book' \\
+\citep{denbesten1990stranding}
+\end{exe}
+
+In this example, the patient DP, \textit{das Buch} scrambled out of the VP and therefore the sentence with the fronted participle in (\ref{gelesen}) is also grammatical.
+
+\subsection{Head-to-specifier movement}
+
+Participle fronting also occurs in several Slavic languages, including Bulgarian. Interestingly, this construction is also licensed only in certain discourse contexts which appear to be to the ones that license the construction in German. \citet{harizanov2015head} proposes an analysis in which only the head of the VP, the participle, moves to Spec,TP. He further suggests, that this movement is triggered by a pragmatic feature F which explains why this construction is only licensed in certain discourse contexts. If we adapt this analysis to German such that a head moves to Spec,CP, we can analyze a sentence such as  (\ref{gelesen}) as following.
+
+\begin{exe}
+\ex
+\tiny 
+\Tree 
+[ .CP {{\ }\node{speccp}{ \ }} 
+  [ .C' {C[SE\node{c}L:F]} 
+    [ .TP {\ }\node{spectp2}{ \ }\node{spectp}{\ } 
+      [ .T' {\ }\node{t2}T\node{t1}{\ } 
+        [ .VP_{AUX}
+          {\ }\node{specvp}{ \ } 
+          [ .V_{AUX}' 
+            [ .NegP
+              [ .NegP' 
+                [ .Neg not ]
+                [ .VP
+                   \qroof{Ha\node{subj}ns}.DP
+                   [ .V' 
+                     \qroof{the\node{obj}\ book}.DP
+                     [ .V {rea\node{vp}d[F]} ]
+                     ] ] ] ]
+            [ .V_{AUX} ha\node{aux}ve ] ] ]              
+        ] ] ] ] 
+        \abarnodeconnect[-84pt]{aux}{t1}
+        \abarnodeconnect[-4pt]{t2}{c}
+        \abarnodeconnect[-4pt]{obj}{specvp}
+        \abarnodeconnect[-4pt]{subj}{spectp}
+        %\abarnodeconnect[-4pt]{spectp2}{speccp}
+        \abarnodeconnect[-10pt]{vp}{speccp}
+\end{exe}
+
+\ \\
+
+In this analysis, the participle bears the discourse-relevant feature F which triggers the movement to Spec,CP. The agent-DP still moves up to Spec,TP to satisfy the EPP-requirement and the scrambling operation is still applied to this sentence as the patient-DP has to move out of the VP so that we get the correct word order.
+
+This analysis violates the head-movement constraint as a head is moving to a specifier position. However, \citet{harizanov2015head} provides strong evidence for the head-to-specifier movement in Bulgarian. First, the participle cannot be fronted along with its complement or modifiers.
+
+\begin{exe}
+\ex  \label{bulg1} \begin{xlist}
+\ex \gll \textbf{razkazvala} beše često Ivana tazi istorija \\
+told had often Ivana this story \\
+`Ivana had oven told this story'.
+\ex  * [ \textbf{razkazvala} [ tazi istorija ]_{DP} ]_{VP} beše Ivana
+\ex  * [ [ često ]_{AdvP} \textbf{razkazvala} beše ]_{VP} Ivana tazi istorija
+\ex  * [ [ često ]_{AdvP} \textbf{razkazvala} [ tazi istorija ]_{DP} ]_{VP} beše Ivana
+\end{xlist}
+\begin{flushright} \citep{rivero1991,lambova2004b, lambova2004a}\end{flushright}
+\end{exe}
+
+In (\ref{bulg1}a), only the participle is moving to the sentence-initial position. In the ungrammatical sentences in (\ref{bulg1}b-d), a DP, an AdvP or both are moving along the participle. This observation suggests that in Bulgarian, unlike in German, only a head but not an entire VP can be topicalized.
+
+Based on this data, one could also assume that the participle is adjoined to the auxiliary which would not violate the head movement constraints. However, such an analysis would not explain the data in (\ref{bulg2}). In these sentences, either clitics (\textit{mu ja} in (\ref{bulg2}a)) or particles (\textit{maj} in (\ref{bulg2}b)) intervene between the participle and the auxiliary. 
+
+\begin{exe}
+\ex \label{bulg2} \begin{xlist}
+\ex \gll \textbf{pročela} mu ja beše \\
+read \textsc{3.masc.sg.dat} \textsc{3.fem.sg.acc} had \\
+`She had read to him'\\
+\citep{franks2008}
+\ex \gll {[...]} i văpreki vsičko mu \textbf{dali} maj bjaha 4 godini zatvor \\
+{} and despite everything to.him given apparently had 4 years prison \\
+`... and despite everything they had apparently given him 4 years in prison' \\
+\citep{harizanov2015head}
+\end{xlist}
+\end{exe}
+
+\citet{harizanov2015head} therefore argues that the participle is not adjoined to the auxiliary. Further, it seems that the participle is in complementary position to other elements that can occupy Spec,TP and for this reason he suggests that the most plausible landing site for fronted participles is Spec,TP.
+
+
+\section{Evidence in German}
+
+The observations in Bulgarian and the fact that participle fronting happens in similar discourse contexts raise the question whether there exists any evidence for head-to-specifier movement in German. More concretely, we can ask the question whether there exist any constructions involving participle fronting that cannot be explained by the movement of an entire VP.  As fronted participles seem to be in complementary distribution with all other elements that can move to Spec,CP, this would be potential evidence for head-to-specifier movement.
+
+\subsection{CP-complements}
+
+One observation is that participles with CP complements can also be fronted in German as exemplified in (\ref{cp-fronting-1}).
+
+\begin{exe}
+\ex \label{cp-fronting-1} \gll \textbf{Gebettelt} hätte der Baron darum, [ dass sein Sohn sie heiraten dürfe ]_{CP}  \\
+Begged would-have the baron for {} that his son her marry would-be-allowed-to {}  \\
+`The baron would have begged that his son could marry her.' \\
+(Adapted from Patrick Süskind, \textit{Das Parfum})
+\end{exe}
+
+At the same time, the scrambling operation cannot target CPs and therefore sentences such as (\ref{cpscr}) in which the CP moves out of the VP are ungrammatical. 
+
+\begin{exe}
+\ex[*]{ \label{cpscr} \gll Er hat [ dass das Buch gut ist ]_{CP} gestern [ gesagt ]_{VP}. \\
+He has {} that the book good is {} yesterday {} said {} \\
+`He said yesterday that the book is good.'}
+\end{exe}
+
+The fact that participle fronting can happen despite the fact that CPs cannot be targeted by the scrambling operation seems to be in contradiction with the assumptions made by \citet{webelhuth1987remnant} and initially
+this might seem to be evidence for head-to-specifier movement. However, there is evidence that the CP leaves the VP by some other mechanism. If we consider the sentence in (\ref{cp2}), we can see that the CP which originated as a complement of \textit{sagen} in the \textsc{d}-structure moved to a higher position in the tree in the \textsc{s}-structure.
+
+\begin{exe}
+\ex \label{cp2} \gll Ich habe ihm [ [ sagen ]_{VP} lassen ]_{VP}, [ dass er gehen soll ]_{CP}. \\
+I have him {} {} say {} let {} {} that he go should  {} \\
+`I let someone tell him that he should go.'
+\end{exe}
+
+Further, unlike other complements, CPs are always pronounced after the verb and if we assume that they are generated on the left side of the verb like all its other complements, it seems likely that CPs always evacuate the VP. This additional evidence suggests that \citet{webelhuth1987remnant} were potentially wrong by linking participle fronting only to the scrambling operation. However, if we assume that a CP always moves out of the VP, then sentences such as (\ref{cp-fronting-1}) can also be explained by assuming that everything leaves the VP and that the VP-remnant moves to Spec,CP.
+
+\subsection{Other complements and modifiers}
+
+If we look at VPs with DP- and PP-complements, we also don't see any evidence for head-to-specifier movement. The sentences in (\ref{pp-fronting}) and (\ref{dp-fronting}) are grammatical when the PP or DP is fronted along with the participle (\ref{pp-fronting}a, \ref{dp-fronting}a) and when the constituent stays within the TP (\ref{pp-fronting}b, \ref{dp-fronting}b). 
+
+\begin{exe}
+\ex \label{pp-fronting} \begin{xlist}
+\ex \gll [ Aus dem Hause ]_{PP} \textbf{getrieben} hat er ihn.\\
+{} Out the house {} driven has he him \\
+`He drove him out of the house.' \\
+(DIE ZEIT, 03/11/1954) 
+\ex \textbf{Getrieben} hat er ihn [ aus dem Hause ]$_{PP}$.
+\end{xlist}
+\ex \label{dp-fronting}\begin{xlist}
+\ex \gll[ Einen Lachlaut ]_{DP} \textbf{ausgestoßen} hatte er. \\
+{} A sound-of-laughter {} uttered had he. \\
+`He had uttered a sound of laughter. \\
+(Martin Walser, \textit{Ein springender Brunnen})
+\ex \textbf{Ausgestoßen} hatte er [ einen Lachlaut ]$_{DP}$.
+\end{xlist}
+\end{exe}
+
+The same is also true for adverbials which can be either fronted along with the participle (\ref{advp-fronting}a) or stay within the TP (\ref{advp-fronting}b). In (\ref{advp-fronting}a), the parent-VP of the AdvP moves to Spec,CP while in (\ref{advp-fronting}b), the sister-VP of the AdvP moves to Spec,CP.
+
+\begin{exe}
+\ex \label{advp-fronting}
+\begin{xlist}
+\ex \gll [ Gut ]_{AdvP} \textbf{verpackt} hab ich sie ja. \\
+{} Well {} packaged have I them indeed \\
+`I did indeed packaged them well.' \\
+(Letter from Irene G. to Ernst G. , 01/12/1940)
+\ex \textbf{Verpackt} hab ich sie ja [ gut ]$_{AdvP}$.
+\end{xlist}
+\end{exe}
+
+All these observations can be explained under the assumption that a VP moves to Spec,CP and none of these observations seem to indicate that only a head is moving.
+
+
+%\begin{itemize}
+
+%\item DP-complements and adverbials can also be fronted along the participle.
+
+
+
+%\item Negation phrases
+
+%\begin{exe}
+%\ex \gll  [ Nicht ]_{NegP} \textbf{verstanden} habe ich seine Obsession [...] \\
+%{} Not {} \textbf{understood} have I his obsession \\
+%`I didn't understand his obsession [...]' \\
+%(adapted from DIE ZEIT, 04/05/1996)
+%\end{exe}
+%\end{itemize}
+
+\subsection{Coordination}
+
+As illustrated in (\ref{coord}), coordinated participles can also be fronted. 
+
+\begin{exe}
+\ex \label{coord} \gll Ich habe diese Kinder nur empfangen und geboren, \textbf{genährt} und \textbf{aufgezogen} hat sie ihre Amme. \\
+I have these children only conceived and given-birth-to fed and raised has them their fostress. \\
+`I only conceived and gave birth to these children, their fostress fed and raised them.' \\ 
+(Christine Brückner, \textit{Wenn du geredet hättest})
+\end{exe}
+
+If we consider that both of these participles share their object \textit{sie}, it is most likely that the two heads are coordinated. Therefore, this observation seems to be compatible with both analyses and consequently also does not provide any evidence that only a head is moving to Spec,CP.
+
+\subsection{Resultatives}
+
+Finally, let us turn to resultative constructions as in (\ref{res1}).
+
+\begin{exe}
+\ex \label{res1} \gll Er hat das Metall flachgehämmert. \\
+He has the metal flat-hammered. \\
+`He hammered the metal flat.
+\end{exe}
+
+Following \citet{muller2002complex}, I assume that resultatives in German behave like phrasal verbs and following the analysis of phrasal verbs by \citet{zeller2002particle}, I assume that resultative verb phrases have the following deep structure.
+
+\begin{exe}
+\ex \Tree [ .VP [ .V' \qroof{the metal}.DP  \qroof{flat}.AdvP  [ .V hammered ]  ]   ]
+\end{exe}
+
+I further assume that a merging operation in the \textsc{p}-form is responsible for that fact that the resultative and the verb are pronounces as one word when they are adjacent as it is the case in (\ref{res1}).
+
+If we compare a sentence with a resultative construction whose participle is fronted (\ref{res2}) to a sentence with a finite resultative VP (\ref{res3}), we can see that they behave differently.
+
+\begin{exe}
+\ex \label{res2} \gll Flach\textbf{gehämmert} hat er das Metall. \\
+Flat-hammered has he the metal \\
+`He hammered the metal flat.'
+\ex  \label{res3} \gll Er hämmert das Metall flach.\\
+He hammers the metal flat \\
+`He is hammering the metal flat.'
+\end{exe}
+
+In  (\ref{res2}), the resultative is fronted along with the participle but in (\ref{res3}) the finite verb moves without the resultative. As we know that the movement of the finite verb to C in (\ref{res3}) is an example of head-to-head movement and as the movement in (\ref{res3}) is different from the movement in (\ref{res2}), this seems to be a further indicator that an entire phrase moves to Spec,CP in the case of participle fronting. Further, a sentence such as (\ref{res4}) is ungrammatical.
+
+\begin{exe}
+\ex \label{res4} \gll  * \textbf{Gehämmert} hat er das Metall flach. \\
+{} Hammered has he the metal flat\\
+`He hammered the metal flat.'
+\end{exe}
+
+This additional evidence also suggests that an entire phrase has to move to Spec,CP. If we assume that the patient DP, \textit{das Metall}, scrambles out of the VP and then the remnant VP which contains the participle and the resultative moves to Spec,CP we get the correct word order for sentences such as (\ref{res3}). If we assumed that only a head moves, on the other hand, we don't have an explanation for why the resultative cannot stay in situ as in the ungrammatical sentence in (\ref{res4}).
+
+
+%TODO: Mention in 1-2 sentences how we would analyze a sentence such as 22.
+
+
+%\begin{itemize}
+
+
+
+
+%\item Resultatives in German seem to behave like particle verbs.
+
+
+
+%\item Following \citet{zeller2002particle}, I assume that \textit{hammered the metal flat} can be analyzed as following in German.
+
+
+
+%\item The resultative always has to be fronted along with the participle.
+
+%\begin{exe}
+%\ex \gll Flach\textbf{gehämmert} hat er das Metall. \\
+%Flat-hammered has he the metal. \\
+%`He hammered the metal flat.'
+%\ex[*]{ \gll \textbf{Gehämmert} hat er das Metall flach. \\
+%Hammered has he the metal flat. \\
+%`He hammered the metal flat.'}
+%\end{exe}
+
+
+%$\Rightarrow$ Further support for Analysis 1.
+
+%\end{itemize}
+
+
+%\subsection{CPs revisited}
+
+%\begin{itemize}
+%\item As mentioned above, CPs cannot be part of scramblig in the \textit{mittelfeld}.
+
+%\item But CPs still seem to move out of the VP.
+
+
+
+%\item In this sentence the CP is the complement of \textit{sagen} and it seemed to have moved out of the VP.
+
+%$\Rightarrow$ Does not seem to contradict Analysis 1.
+
+%\end{itemize}
+
+\section{Conclusion}
+
+In this paper, I contrasted the analysis of participle fronting by \citet{webelhuth1987remnant} in German to an alternative analysis which I adapted from an analysis of a similar phenomena in Bulgarian by \citet{harizanov2015head}. I showed that the former analysis is able to explain a wide range of different constructions in German and that there does not seem to be any direct evidence for head-to-specifier movement in any of these constructions in German. 
+
+%A remaining open question is how we can explain that these constructions are only licensed in certain discourse contexts.
+
+
+
+%\begin{itemize}
+
+%\item There does not seem to be any evidence that head-to-specifier movement happens in German.
+
+%\item The analysis by \citet{webelhuth1987remnant} seems to be able to explain all the constructions that I discussed.
+
+%\item Open question:  How can we restrict the fronting to specific discourse contexts?
+
+%\end{itemize}
+
+%negation
+
+%conjunction
+% 
+
+
+%present examples and describe contexts
+
+%
+
+% present two possible analyses
+
+% analysis 1: webelhuth et al 
+
+% analysis 2: participle fronting
+
+% adverbs
+
+% conjunction
+
+% resultative, particles
+
+%CPs probably heavy shift
+
+% 
+
+%\scriptsize
+
+\small
+
+\nocite{strong1886outlines}
+
+\bibliographystyle{named}
+\bibliography{references}
+
+
+\end{document}
