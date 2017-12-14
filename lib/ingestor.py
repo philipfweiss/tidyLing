@@ -12,11 +12,14 @@ class Ingestor:
         try:
             file = open(filepath, 'r')
             name, ext = os.path.splitext(filepath)
+
             if ext in self.parsermap:
                 return self._invoke_parser(file, ext)
 
         except Exception:
             print("Unable to parse " + filepath)
+
+        return []
 
 
     def _invoke_parser(self, file, ext):
