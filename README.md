@@ -4,9 +4,13 @@ TidyLinguist is an online resource for linguists. It takes linguistics papers in
 
 ## TidyLing Format
 
-In a tidyling format each example in the paper or document occupies a row
+In a tidyling format each linguistic example occupies a row and the columns are the variables of interest to linguistis such as the transliteration, the gloss, the translation, and the judgement.
 
-
+| Judgement | Transliteration | Gloss | Translation | Language | Context | Source | document name | notes | 
+|------|:---------:|:-------------:|:-----:|:--------:|:-------:|:-------:|:-------:|:-------:|
+| ? | example 1 | right-aligned | $1600 | | | | | |
+| # | example 2 | centered      |   $12 | | | | | |
+| | example 3 | are neat      |    $1 | | | | | |
 
 TidyLing is a tidy data set for linguistics examples. In a tidy dataset, each observation is a row and each variable in a column ([Wickham 2014](http://vita.had.co.nz/papers/tidy-data.html)).
 
