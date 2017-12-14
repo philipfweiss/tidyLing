@@ -1,8 +1,6 @@
-import TexSoup
-
 class TidyLingExample:
     def __init__(self):
-        self.file = None
+        pass
 
 class Ingestor:
     def __init__(self):
@@ -10,6 +8,17 @@ class Ingestor:
 
     def ingest(self, filepath):
         pass
+
+    def invoke_parser(self):
+        pass
+
+
+
+
+    
+
+
+
 
 
 
