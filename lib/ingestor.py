@@ -1,6 +1,6 @@
 import os
-from parsers.base import *
-from parsers.tex import *
+from .parsers.base import *
+from .parsers.tex import *
 
 class Ingestor:
     def __init__(self):
