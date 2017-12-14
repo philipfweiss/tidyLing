@@ -2,10 +2,19 @@ import TexSoup
 
 class TidyLingExample:
     def __init__(self):
-        pass
+        self.file = None
 
-class Parser:
+class Ingestor:
     def __init__(self):
         pass
+
+    def ingest(self, filepath):
+        pass
+
+
+
+
+
+
 
 
