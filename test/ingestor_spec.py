@@ -12,7 +12,12 @@ EXAMPLE_COUNTS = {
     "sebastian_lexsem.tex": 63,
     "sebastian_qp1.tex": 54,
     "sebastian_qp2_v3.tex": 37,
-    "sebastian_syntax.tex": 34 
+    "sebastian_syntax.tex": 34,
+    "abstract-e.tex": 5,
+    "Jasbi_nacilProceedings_ra": 19,
+    "Jasbi16-Persian-indefinites": 14,
+    "lsa-i-abstract.tex": 5,
+    "ucsd_sembabble.tex": 51 
 }
 
 
