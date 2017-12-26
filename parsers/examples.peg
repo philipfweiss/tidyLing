@@ -1,0 +1,5 @@
+grammar Examples
+  document <- example* (!"\\begin{exe}" .)*
+  example <- (!"\\begin{exe}" .)* exampleBody
+  exampleBody <- "\\begin{exe}" (!"\\end{exe}" .)* "\\end{exe}"
+ 

@@ -1,0 +1,7 @@
+grammar Gb4e
+  container <- "\\begin{exe}" whitespace* body "\\end{exe}"
+  body <- example+
+  example <- whitespace* "\\ex" whitespace+ string xlist? whitespace*
+  xlist <- "\\begin{xlist}" example+ "\\end{xlist}" 
+  string <- (!("\\ex" whitespace / "\\end{xlist}" / "\\begin{xlist}" / "\\end{exe}") .)*
+  whitespace <- ("\n" / "\t" / " ")
